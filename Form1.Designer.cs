@@ -89,6 +89,7 @@
             this.rtbBankPathName.Size = new System.Drawing.Size(480, 30);
             this.rtbBankPathName.TabIndex = 4;
             this.rtbBankPathName.Text = "";
+            this.rtbBankPathName.TextChanged += new System.EventHandler(this.rtbBankPathName_TextChanged);
             // 
             // btnBankBrowse
             // 
@@ -141,6 +142,7 @@
             this.rtbSAPPathName.Size = new System.Drawing.Size(480, 30);
             this.rtbSAPPathName.TabIndex = 4;
             this.rtbSAPPathName.Text = "";
+            this.rtbSAPPathName.TextChanged += new System.EventHandler(this.rtbSAPPathName_TextChanged);
             // 
             // btnSAPBrowse
             // 
@@ -193,6 +195,7 @@
             this.rtbStoreSlipPathName.Size = new System.Drawing.Size(480, 30);
             this.rtbStoreSlipPathName.TabIndex = 4;
             this.rtbStoreSlipPathName.Text = "";
+            this.rtbStoreSlipPathName.TextChanged += new System.EventHandler(this.rtbStoreSlipPathName_TextChanged);
             // 
             // btnStoreSlipBrowse
             // 
@@ -222,13 +225,14 @@
             // btnCheck
             // 
             this.btnCheck.Font = new System.Drawing.Font("Times New Roman", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.btnCheck.Location = new System.Drawing.Point(239, 470);
+            this.btnCheck.Location = new System.Drawing.Point(239, 469);
             this.btnCheck.Margin = new System.Windows.Forms.Padding(4);
             this.btnCheck.Name = "btnCheck";
-            this.btnCheck.Size = new System.Drawing.Size(129, 32);
+            this.btnCheck.Size = new System.Drawing.Size(129, 42);
             this.btnCheck.TabIndex = 7;
             this.btnCheck.Text = "Check";
             this.btnCheck.UseVisualStyleBackColor = true;
+            this.btnCheck.Click += new System.EventHandler(this.btnCheck_Click);
             // 
             // lblMain
             // 
@@ -267,7 +271,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(11F, 22F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(667, 514);
+            this.ClientSize = new System.Drawing.Size(664, 518);
             this.Controls.Add(this.lblCredit);
             this.Controls.Add(this.lblDesc);
             this.Controls.Add(this.lblMain);
@@ -282,6 +286,7 @@
             this.Margin = new System.Windows.Forms.Padding(4);
             this.MaximizeBox = false;
             this.Name = "Pigeon";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Pigeon";
             ((System.ComponentModel.ISupportInitialize)(this.pbLogo)).EndInit();
             this.gbBank.ResumeLayout(false);
