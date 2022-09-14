@@ -8,9 +8,9 @@ namespace Pigeon.Classes
 {
     internal class Slip
     {
-        public DateOnly date { get; set; }
-        public TimeOnly time { get; set; }
-        public decimal amount { get; set; }
-        public string? store { get; set; }
+        public DateOnly TrxDate { get; set; }
+        public TimeOnly TrxTime { get; set; }
+        public decimal Amount { get; set; }
+        public string? Store { get; set; }
     }
 }

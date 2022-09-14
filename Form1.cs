@@ -2,135 +2,57 @@ namespace Pigeon
 {
     public partial class Pigeon : Form
     {
+        string path = Environment.CurrentDirectory + "\\files";
+        Dictionary<string, List<string>> dict = new Dictionary<string, List<string>>();
         public Pigeon()
         {
             InitializeComponent();
-            enabled_btnCheck();
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+            lookingFile();
         }
 
-        private void btnBankBrowse_Click(object sender, EventArgs e)
+        private void lookingFile()
         {
-            OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Title = "Select Bank file";
-            ofd.InitialDirectory = @"C:\";
-            ofd.Filter = "Excel Files| *.xls; *.xlsx; *.xlsm";
-            ofd.FilterIndex = 1;
-            ofd.ShowDialog();
-            if (ofd.FileName != "")
+            string[] files = Directory.GetFiles(Environment.CurrentDirectory + "\\files", "*.xlsx");
+            foreach (var f in files)
             {
-                rtbBankPathName.Text = ofd.FileName;
+                var x = f.Split(Environment.CurrentDirectory + "\\files\\")[1].Split("_");
+                var key = x[0];
+                var value = x[1].Replace(".xlsx", "");
+                if (key.StartsWith("B") && key.Length == 6)
+                {
+                    if (dict.Keys.Contains(key))
+                    {
+                        dict[key].Add(value);
+                    }
+                    else
+                    {
+                        dict.Add(key, new List<string> { value });
+                    }
+                }
             }
         }
 
-        private void cbBankSameDir_CheckedChanged(object sender, EventArgs e)
+        private void btnCheckFile_Click(object sender, EventArgs e)
         {
-            if (cbBankSameDir.Checked)
-            {
-                rtbBankPathName.Text = "";
-                btnBankBrowse.Enabled = false;
-            }
-            else
-            {
-                btnBankBrowse.Enabled = true;
-            }
-            enabled_btnCheck();
+            CheckFiles checkFiles = new CheckFiles(dict);
+            checkFiles.ShowDialog();
         }
 
-        private void btnSAPBrowse_Click(object sender, EventArgs e)
-        {
-            OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Title = "Select SAP file";
-            ofd.InitialDirectory = @"C:\";
-            ofd.Filter = "Excel Files| *.xls; *.xlsx; *.xlsm";
-            ofd.FilterIndex = 1;
-            ofd.ShowDialog();
-            if (ofd.FileName != "")
-            {
-                rtbSAPPathName.Text = ofd.FileName;
-            }
-        }
-
-        private void btnStoreSlipBrowse_Click(object sender, EventArgs e)
-        {
-            OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Title = "Select Store Slip file";
-            ofd.InitialDirectory = @"C:\";
-            ofd.Filter = "Excel Files| *.xls; *.xlsx; *.xlsm";
-            ofd.FilterIndex = 1;
-            ofd.ShowDialog();
-            if (ofd.FileName != "")
-            {
-                rtbStoreSlipPathName.Text = ofd.FileName;
-            }
-        }
-
-        private void cbSAPSameDir_CheckedChanged(object sender, EventArgs e)
-        {
-            if (cbSAPSameDir.Checked)
-            {
-                rtbSAPPathName.Text = "";
-                btnSAPBrowse.Enabled = false;
-            }
-            else
-            {
-                btnSAPBrowse.Enabled = true;
-            }
-            enabled_btnCheck();
-        }
-
-        private void cbStoreSlipSameDir_CheckedChanged(object sender, EventArgs e)
-        {
-            if (cbStoreSlipSameDir.Checked)
-            {
-                rtbStoreSlipPathName.Text = "";
-                btnStoreSlipBrowse.Enabled = false;
-            }
-            else
-            {
-                btnStoreSlipBrowse.Enabled = true;
-            }
-            enabled_btnCheck();
-        }
-
-        private void rtbBankPathName_TextChanged(object sender, EventArgs e)
-        {
-            enabled_btnCheck();
-        }
-
-        private void rtbSAPPathName_TextChanged(object sender, EventArgs e)
-        {
-            enabled_btnCheck();
-        }
-
-        private void rtbStoreSlipPathName_TextChanged(object sender, EventArgs e)
-        {
-            enabled_btnCheck();
-        }
-
-        private void enabled_btnCheck()
-        {
-            if ((rtbBankPathName.Text != "" || rtbSAPPathName.Text != "" || rtbStoreSlipPathName.Text != "") || cbBankSameDir.Checked && cbSAPSameDir.Checked && cbStoreSlipSameDir.Checked)
-            {
-                btnCheck.Enabled = true;
-            }
-            else
-            {
-                btnCheck.Enabled = false;
-            }
-        }
-
-        private void btnCheck_Click(object sender, EventArgs e)
+        private void btnCompare_Click(object sender, EventArgs e)
         {
             try
             {
-                
+                Compare compare = new Compare(dict);
+                compare.ShowDialog();
             }
-            catch (Exception err)
+            catch (Exception exc)
             {
-                MessageBox.Show(err.Message);
+                MessageBox.Show(exc.Message);
             }
-            Checking checking = new Checking(rtbStoreSlipPathName.Text);
-            checking.ShowDialog();
         }
     }
 }
