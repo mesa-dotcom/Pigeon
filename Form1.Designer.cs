@@ -95,7 +95,7 @@
             this.gbCondition.Controls.Add(this.label1);
             this.gbCondition.Location = new System.Drawing.Point(16, 143);
             this.gbCondition.Name = "gbCondition";
-            this.gbCondition.Size = new System.Drawing.Size(636, 119);
+            this.gbCondition.Size = new System.Drawing.Size(636, 134);
             this.gbCondition.TabIndex = 11;
             this.gbCondition.TabStop = false;
             this.gbCondition.Text = "Place Files Path";
@@ -104,7 +104,7 @@
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Times New Roman", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.label3.Location = new System.Drawing.Point(6, 86);
+            this.label3.Location = new System.Drawing.Point(6, 98);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(303, 19);
             this.label3.TabIndex = 2;
@@ -114,7 +114,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Times New Roman", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.label2.Location = new System.Drawing.Point(6, 57);
+            this.label2.Location = new System.Drawing.Point(6, 63);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(229, 19);
             this.label2.TabIndex = 1;

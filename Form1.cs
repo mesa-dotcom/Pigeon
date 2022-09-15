@@ -44,15 +44,8 @@ namespace Pigeon
 
         private void btnCompare_Click(object sender, EventArgs e)
         {
-            try
-            {
-                Compare compare = new Compare(dict);
-                compare.ShowDialog();
-            }
-            catch (Exception exc)
-            {
-                MessageBox.Show(exc.Message);
-            }
+            Compare compare = new Compare(dict);
+            compare.ShowDialog();
         }
     }
 }
