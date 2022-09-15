@@ -16,12 +16,12 @@ namespace Pigeon
 
         private void lookingFile()
         {
-            string[] files = Directory.GetFiles(Environment.CurrentDirectory + "\\files", "*.xlsx");
+            string[] files = Directory.GetFiles(Environment.CurrentDirectory + "\\files", "*.*").Where(file => new string[] { ".xlsx", ".xls" }.Contains(Path.GetExtension(file))).ToArray();
             foreach (var f in files)
             {
                 var x = f.Split(Environment.CurrentDirectory + "\\files\\")[1].Split("_");
                 var key = x[0];
-                var value = x[1].Replace(".xlsx", "");
+                var value = x[1].Split(".")[0];
                 if (key.StartsWith("B") && key.Length == 6)
                 {
                     if (dict.Keys.Contains(key))

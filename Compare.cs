@@ -16,57 +16,123 @@ namespace Pigeon
     {
         Dictionary<string, List<string>> dict = new Dictionary<string, List<string>>();
         Microsoft.Office.Interop.Excel.Application app = new Microsoft.Office.Interop.Excel.Application();
+        public int cells_ignore = 5;
         public Compare(Dictionary<string, List<string>> dict_param)
         {
             dict = dict_param;
             InitializeComponent();
-            tbDebug.Text = "--- Program is starting " + DateTime.Now.ToString() + "---";
+            tbDebug.Text = "****** Program is starting " + DateTime.Now.ToString() + " ******";
         }
 
-        private void Compare_Load(object sender, EventArgs e)
-        {
-            preparing();
-        }
-
-        private void preparing()
+        private void starting()
         {
             foreach (KeyValuePair<string, List<string>> entry in dict)
             {
-                addTextToDebug("Getting data from the files of the store " + entry.Key + ".");
+                // Getting Data
+                addTextToDebug(entry.Key);
+                addTextToDebug(" + Getting data from the files of the store.");
+                List<TnxBank> tnxBanks = new List<TnxBank>();
+                List<Slip> slips = new List<Slip>();
+                List<SAP> SAPs = new List<SAP>();
+                var tnxBankSumByDate = "";
+                var tnxBankSumByDateByBank = "">;
+                var tnxSapSum = "";
+                var tnxSlipSum = "";
                 if (entry.Value.Count != 1) {
-                    List<Slip> slips = new List<Slip>();
-                    List<SAP> SAPs = new List<SAP>();
                     if (entry.Value.Contains("Bank"))
                     {
-                        addTextToDebug(entry.Key + " bank file is read");
+                        addTextToDebug("  - Reading file bank...");
+                        tnxBanks = getTnxBank(entry.Key + "_Bank");
                     }
                     if (entry.Value.Contains("SAP"))
                     {
-                        SAPs = getSAPs(entry.Key + "_SAP.xlsx");
-                        addTextToDebug(entry.Key + " sap file is read");
+                        addTextToDebug("  - Reading file SAP...");
+                        SAPs = getSAPs(entry.Key + "_SAP");
+
                     }
                     if (entry.Value.Contains("StoreSlip"))
                     {
-                        slips = getSlips(entry.Key + "_StoreSlip.xlsx");
-                        addTextToDebug(entry.Key + " store slip file is read");
+                        addTextToDebug("  - Reading file store slip...");
+                        slips = getSlips(entry.Key + "_StoreSlip");
                     }
+                }
+                // Calucate sum group by
+                addTextToDebug(" + Calcute total from the files of the store.");
+                if (tnxBanks.Count != 0)
+                {
+                    addTextToDebug("  - Get total of the bank file...");
+                    // filter ACLEDA Bank Plc.
+                    var sss = tnxBanks.OrderBy(tb => tb.CutoffDate).GroupBy(tb => new { tb.CutoffDate, tb.InterXBank }).Select(i => new
+                    {
+                        CutoffDate = i.Key.CutoffDate,
+                        InterXBank = i.Key.InterXBank,
+                        Total = i.Sum(x => x.PaymentAmount)
+                    }).ToList();
+                    var bankSumByDate = tnxBanks.OrderBy(tb => tb.CutoffDate).GroupBy(tb => tb.CutoffDate).Select(i => new Object[]
+                    {
+                            i.Key,
+                            i.Sum(x => x.PaymentAmount)
+                    }).ToList();
+                }
+                if (SAPs.Count != 0)
+                {
+                    addTextToDebug("  - Get total of the sap file...");
+                    var sapSum = SAPs.OrderBy(s => s.Assignment).GroupBy(s => s.Assignment).Select(i => new object[] {
+                        i.Key,
+                        i.Sum(x => x.AmountInLocalCur)
+                    }).ToList();
+                }
+                if (slips.Count != 0)
+                {
+                    addTextToDebug("  - Get total of the slip file...");
+                    var slipSum = slips.OrderBy(s => s.CutoffDate).GroupBy(s => s.CutoffDate).Select(i => new object[] {
+                            i.Key.ToString(),
+                            i.Sum(x => x.Amount)
+                        }).ToList();
                 }
             }
         }
 
-        private void compareSAPandSlip(List<Slip> slips, List<SAP> SAPs)
+        private List<TnxBank> getTnxBank(string filename)
         {
-            List<Object[]> slipSum = slips.OrderBy(s => s.CutoffDate).GroupBy(s => s.CutoffDate).Select(i => new object[]
+            List<TnxBank> tnxBanks = new List<TnxBank>();
+            string path = Environment.CurrentDirectory + "\\files\\" + filename;
+            Workbook wb = app.Workbooks.Open(path);
+            Worksheet wsh = wb.Worksheets[1];
+            Microsoft.Office.Interop.Excel.Range cells = wsh.Cells;
+            int running_row = cells_ignore + 2;
+            try
             {
-                i.Key.ToString(),
-                i.Sum(x => x.Amount)
-            }).ToList();
-            List<Object[]> sapSum = SAPs.OrderBy(s => s.Assignment).GroupBy(s => s.Assignment).Select(i => new object[]
+                while (cells[running_row, 1].value != null)
+                {
+                    TnxBank tnxBank = new TnxBank();
+                    var dt = DateTime.Parse(cells[running_row, 1].value);
+                    var donly = DateOnly.FromDateTime(dt);
+                    var tonly = TimeOnly.FromDateTime(dt);
+                    var amt = cells[running_row, 12].value;
+                    tnxBank.TnxDateTime = dt;
+                    tnxBank.CutoffDate = tonly.CompareTo(TimeOnly.Parse("05:00 PM")) < 0 ? donly : donly.AddDays(1);
+                    tnxBank.PaymentAmount = Decimal.Parse(amt);
+                    tnxBank.TnxCCY = cells[running_row, 14].value;
+                    tnxBank.RefPrimary = cells[running_row, 16].value == "" ? cells[running_row, 16].value : cells[running_row, 17].value;
+                    tnxBank.SettleStatus = cells[running_row, 22].value;
+                    tnxBank.SRCBank = cells[running_row, 19].value;
+                    tnxBank.InterXBank = cells[running_row, 19].value == "ACLEDA Bank Plc." ? "InnerBank" : "Other"; 
+                    tnxBanks.Add(tnxBank);
+                    changeLblProcessDesc($"reading row {running_row - cells_ignore - 1} from file {filename}.");
+                    running_row++;
+                }
+            }
+            catch (Exception exc)
             {
-                i.Key,
-                i.Sum(x => x.AmountInLocalCur)
-            }).ToList();
-            System.Windows.Forms.Label lbl = new System.Windows.Forms.Label();
+                wb.Close(0);
+                app.Quit();
+                throw new Exception(exc.Message + " in " + filename);
+            }
+            wb.Close(0);
+            app.Quit();
+            return tnxBanks;
+
         }
 
         private List<SAP> getSAPs(string filename)
@@ -76,11 +142,12 @@ namespace Pigeon
             Workbook wb = app.Workbooks.Open(path);
             Worksheet wsh = wb.Worksheets[1];
             Microsoft.Office.Interop.Excel.Range cells = wsh.Cells;
-            if (checkColumnName(cells, new List<string> { "Assignment", "DocumentNo", "BusA", "Type", "Doc. Date", "PK", "Amount in local cur.", "LCurr", "Text" }))
+            var ccn = checkColumnName(cells, new List<string> { "Assignment", "DocumentNo", "BusA", "Type", "Doc. Date", "PK", "Amount in local cur.", "LCurr", "Text" });
+            if ( ccn != "")
             {
                 wb.Close(0);
                 app.Quit();
-                throw new Exception(filename + "'s columns are not correctly set.");
+                throw new Exception(filename + " column (" + ccn +") is not correctly set.");
             }
             int running_row = 2;
             try
@@ -94,11 +161,13 @@ namespace Pigeon
                     sap.Type = cells[running_row, 4].Text;
                     sap.DocDate = cells[running_row, 5].Text;
                     sap.PK = cells[running_row, 6].Text;
-                    sap.AmountInLocalCur = (decimal) Math.Abs(cells[running_row, 7].Value);
+                    var amount = cells[running_row, 7].Value;
+                    sap.AmountInLocalCur = (decimal) Math.Abs(amount);
                     sap.LCurr = cells[running_row, 8].Text;
                     sap.Text = cells[running_row, 9].Text;
-                    sap.InterXBank = cells[running_row, 9].Text.Contains("KHQR") ? "Other" : "Same";
+                    sap.InterXBank = cells[running_row, 9].Text.Contains("KHQR") ? "Other" : "InnerBank";
                     SAPs.Add(sap);
+                    changeLblProcessDesc($"reading row {running_row - 1} from file {filename}.");
                     running_row++;
                 }
             }
@@ -106,9 +175,10 @@ namespace Pigeon
             {
                 wb.Close(0);
                 app.Quit();
-                throw new Exception(exc.Message);
+                throw new Exception(exc.Message + " in " + filename);
             }
-
+            wb.Close(0);
+            app.Quit();
             return SAPs;
         }
 
@@ -120,11 +190,12 @@ namespace Pigeon
             Worksheet wsh = wb.Worksheets[1];
             Microsoft.Office.Interop.Excel.Range cells = wsh.Cells;
             // Check column Name
-            if (checkColumnName(cells, new List<string> { "Date", "Time", "Amount"}))
+            var ccn = checkColumnName(cells, new List<string> { "Date", "Time", "Amount" });
+            if (ccn != "")
             {
                 wb.Close(0);
                 app.Quit();
-                throw new Exception(filename + "'s columns are not correctly set.");
+                throw new Exception(filename + " column (" + ccn + ") is not correctly set.");
             }
             int running_row = 2;
             try
@@ -139,6 +210,7 @@ namespace Pigeon
                     slip.CutoffDate = slip.TrxTime.CompareTo(TimeOnly.Parse("05:00 PM")) < 0 ? slip.TrxDate : slip.TrxDate.AddDays(1);
                     slip.Amount = (decimal) cells[running_row, 3].value;
                     slips.Add(slip);
+                    changeLblProcessDesc($"reading row {running_row - 1} from file {filename}.");
                     running_row++;
                 }
             }
@@ -146,26 +218,39 @@ namespace Pigeon
             {
                 wb.Close(0);
                 app.Quit();
-                throw new Exception(exc.Message);
+                throw new Exception(exc.Message + " in " + filename);
             }
+            wb.Close(0);
+            app.Quit();
             return slips;
         }
 
-        private bool checkColumnName(Microsoft.Office.Interop.Excel.Range cells, List<string> columns)
+        private string checkColumnName(Microsoft.Office.Interop.Excel.Range cells, List<string> columns)
         {
             for (int i = 1; i < columns.Count + 1; i++)
             {
-                if (cells[1, i].value != columns[i])
+                if (cells[1, i].text != columns[i - 1])
                 {
-                    return false;
+                    return cells[1, i].text;
                 }
             }
-            return true;
+            return "";
         }
 
         private void addTextToDebug(string txt)
         {
             tbDebug.AppendText("\r\n" + txt);
+        }
+
+        private void changeLblProcessDesc(string message)
+        {
+            lblProcessDesc.Text = message;
+        }
+
+        private void Compare_Shown(object sender, EventArgs e)
+        {
+            System.Threading.Thread.Sleep(100);
+            starting();
         }
     }
 }
