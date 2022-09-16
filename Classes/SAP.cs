@@ -12,7 +12,7 @@ namespace Pigeon.Classes
         public string DocumentNo { get; set; }
         public string BusA { get; set; }
         public string Type { get; set; }
-        public string DocDate { get; set; }
+        public DateOnly DocDate { get; set; }
         public string PK { get; set; }
         public decimal AmountInLocalCur { get; set; }
         public string LCurr { get; set; }
