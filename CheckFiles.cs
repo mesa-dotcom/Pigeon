@@ -17,10 +17,10 @@ namespace Pigeon
         {
             dict = dict_param;
             InitializeComponent();
-            fillingDatatable();
+            FillingDatatable();
         }
 
-        private void fillingDatatable()
+        private void FillingDatatable()
         {
             DataTable dt = new DataTable();
             dt.Columns.Add("No");
