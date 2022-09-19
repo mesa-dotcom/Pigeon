@@ -40,8 +40,12 @@
             this.btnCheckFile = new System.Windows.Forms.Button();
             this.btnCompare = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pbLogo)).BeginInit();
             this.gbCondition.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // pbLogo
@@ -81,7 +85,7 @@
             // 
             this.lblCredit.AutoSize = true;
             this.lblCredit.Font = new System.Drawing.Font("Times New Roman", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.lblCredit.Location = new System.Drawing.Point(524, 340);
+            this.lblCredit.Location = new System.Drawing.Point(523, 419);
             this.lblCredit.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblCredit.Name = "lblCredit";
             this.lblCredit.Size = new System.Drawing.Size(128, 15);
@@ -93,7 +97,7 @@
             this.gbCondition.Controls.Add(this.label3);
             this.gbCondition.Controls.Add(this.label2);
             this.gbCondition.Controls.Add(this.label1);
-            this.gbCondition.Location = new System.Drawing.Point(16, 143);
+            this.gbCondition.Location = new System.Drawing.Point(16, 141);
             this.gbCondition.Name = "gbCondition";
             this.gbCondition.Size = new System.Drawing.Size(636, 134);
             this.gbCondition.TabIndex = 11;
@@ -133,7 +137,7 @@
             // btnCheckFile
             // 
             this.btnCheckFile.Font = new System.Drawing.Font("Times New Roman", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.btnCheckFile.Location = new System.Drawing.Point(16, 294);
+            this.btnCheckFile.Location = new System.Drawing.Point(16, 374);
             this.btnCheckFile.Name = "btnCheckFile";
             this.btnCheckFile.Size = new System.Drawing.Size(143, 42);
             this.btnCheckFile.TabIndex = 12;
@@ -144,7 +148,7 @@
             // btnCompare
             // 
             this.btnCompare.Font = new System.Drawing.Font("Times New Roman", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.btnCompare.Location = new System.Drawing.Point(509, 294);
+            this.btnCompare.Location = new System.Drawing.Point(509, 374);
             this.btnCompare.Name = "btnCompare";
             this.btnCompare.Size = new System.Drawing.Size(143, 42);
             this.btnCompare.TabIndex = 13;
@@ -163,11 +167,43 @@
             this.label4.TabIndex = 14;
             this.label4.Text = "This application is used to check QR payment.";
             // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.label6);
+            this.groupBox1.Controls.Add(this.label5);
+            this.groupBox1.Location = new System.Drawing.Point(16, 283);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(635, 85);
+            this.groupBox1.TabIndex = 15;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Results Path";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Font = new System.Drawing.Font("Times New Roman", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.label6.Location = new System.Drawing.Point(6, 54);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(291, 19);
+            this.label6.TabIndex = 3;
+            this.label6.Text = "Log: \\results\\log_ddMMyyyy_HHmm.txt";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Font = new System.Drawing.Font("Times New Roman", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.label5.Location = new System.Drawing.Point(6, 26);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(335, 19);
+            this.label5.TabIndex = 3;
+            this.label5.Text = "Result: \\results\\result_ddMMyyyy_HHmm.xlsx";
+            // 
             // Pigeon
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(11F, 22F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(664, 364);
+            this.ClientSize = new System.Drawing.Size(664, 443);
+            this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.btnCompare);
             this.Controls.Add(this.btnCheckFile);
@@ -187,6 +223,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.pbLogo)).EndInit();
             this.gbCondition.ResumeLayout(false);
             this.gbCondition.PerformLayout();
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -205,5 +243,8 @@
         private Button btnCheckFile;
         private Button btnCompare;
         private Label label4;
+        private GroupBox groupBox1;
+        private Label label6;
+        private Label label5;
     }
 }

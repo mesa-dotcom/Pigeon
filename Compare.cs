@@ -37,6 +37,7 @@ namespace Pigeon
         {
             try
             {
+                List<Result> noComparerResults = new List<Result>();  
                 Dictionary<string, List<Result>> grouppedResults = new Dictionary<string, List<Result>>();
                 foreach (KeyValuePair<string, List<string>> entry in dict)
                 {
@@ -141,10 +142,16 @@ namespace Pigeon
                             else
                             {
                                 AddTextToDebug("  - between SAP and Store Slip (SAP - StoreSlip)");
-                                results.Concat(CompareSAPStoreSlip(sapSums, slipSums, entry.Key));
+                                results.AddRange(CompareSAPStoreSlip(sapSums, slipSums, entry.Key));
                             }
                         });
-                        grouppedResults.Add(entry.Key, results.OrderBy(r => r.CutoffDate).ThenBy(r => r.SRCBank).ThenBy(r => r.Comparer1).ToList());
+                        grouppedResults.Add(entry.Key, results.Where(x => x.Comparer2 != null).OrderBy(r => r.CutoffDate).ThenBy(r => r.SRCBank).ThenBy(r => r.Comparer1).ToList());
+                        noComparerResults = (from res in results
+                                            where res.Comparer2 == null
+                                            where res.SRCBank == null
+                                            orderby res.Store
+                                            orderby res.Comparer1
+                                            select res).ToList();
                     }
                     else if (entry.Value.Count == 1)
                     {
@@ -154,7 +161,8 @@ namespace Pigeon
                 btnSaveDebug.Enabled = true;
                 if (grouppedResults.Count != 0 || dict.Count != 0)
                 {
-                    CreateExcelResult(grouppedResults);
+                    AddTextToDebug(" + Creating file excel result");
+                    CreateExcelResult(grouppedResults, noComparerResults);
                 }
                 lblProcessDesc.Text = "...";
                 AddTextToDebug($"****** Program is finishing {DateTime.Now.ToString()} ******");
@@ -168,28 +176,47 @@ namespace Pigeon
             }
         }
 
-        private void CreateExcelResult(Dictionary<string, List<Result>> gr)
+        private void CreateExcelResult(Dictionary<string, List<Result>> gr, List<Result> noComparer)
         {
             Workbook wb = null;
             object misValue = System.Reflection.Missing.Value;
             wb = app.Workbooks.Add(misValue);
-            Worksheet firstSheet = wb.ActiveSheet as Worksheet;
-            firstSheet.Name = "File Info";
-            firstSheet.Cells[1, 1] = "Store";
-            firstSheet.Cells[1, 2] = "Bank File";
-            firstSheet.Cells[1, 3] = "SAP File";
-            firstSheet.Cells[1, 4] = "Store Slip File";
+            AddTextToDebug("  - creating file info sheet");
+            Worksheet fileInfo = wb.ActiveSheet as Worksheet;
+            fileInfo.Name = "File Info";
+            fileInfo.Cells[1, 1] = "Store";
+            fileInfo.Cells[1, 2] = "Bank File";
+            fileInfo.Cells[1, 3] = "SAP File";
+            fileInfo.Cells[1, 4] = "Store Slip File";
             foreach (var x in dict.Select((Entry, Index) => new { Entry, Index }))
             {
-                firstSheet.Cells[x.Index + 2, 1] = x.Entry.Key;
-                firstSheet.Cells[x.Index + 2, 2] = x.Entry.Value.Contains("Bank") ? "Has" : "-";
-                firstSheet.Cells[x.Index + 2, 3] = x.Entry.Value.Contains("SAP") ? "Has" : "-";
-                firstSheet.Cells[x.Index + 2, 4] = x.Entry.Value.Contains("StoreSlip") ? "Has" : "-";
+                fileInfo.Cells[x.Index + 2, 1] = x.Entry.Key;
+                fileInfo.Cells[x.Index + 2, 2] = x.Entry.Value.Contains("Bank") ? "Has" : "-";
+                fileInfo.Cells[x.Index + 2, 3] = x.Entry.Value.Contains("SAP") ? "Has" : "-";
+                fileInfo.Cells[x.Index + 2, 4] = x.Entry.Value.Contains("StoreSlip") ? "Has" : "-";
+            }
+            if (noComparer.Count != 0)
+            {
+                AddTextToDebug("  - creating no comparer sheet");
+                Worksheet noComparerSheet = wb.Sheets.Add(misValue, misValue, 1, misValue) as Worksheet;
+                noComparerSheet.Name = "No Comparer";
+                noComparerSheet.Cells[1, 1] = "Store";
+                noComparerSheet.Cells[1, 2] = "Cutoff Date";
+                noComparerSheet.Cells[1, 3] = "File Type";
+                noComparerSheet.Cells[1, 4] = "Total";
+                for (int i = 0; i < noComparer.Count; i++)
+                {
+                    noComparerSheet.Cells[i + 2, 1] = noComparer[i].Store;
+                    noComparerSheet.Cells[i + 2, 2] = noComparer[i].CutoffDate.ToString("dd-MMM-yyyy");
+                    noComparerSheet.Cells[i + 2, 3] = noComparer[i].Comparer1;
+                    noComparerSheet.Cells[i + 2, 4] = noComparer[i].Comparer1Amount;
+                }
+
             }
             foreach (KeyValuePair<string, List<Result>> g in gr)
             {
-                Worksheet awsh = wb.Sheets.Add(misValue, misValue, 1, misValue)
-                        as Worksheet;
+                AddTextToDebug($"  - creating result {g.Key} sheet");
+                Worksheet awsh = wb.Sheets.Add(misValue, misValue, 1, misValue) as Worksheet;
                 awsh.Name = g.Key;
                 awsh.Cells[1, 1] = "Date";
                 awsh.Cells[1, 2] = "SRC_BANK";
@@ -217,14 +244,13 @@ namespace Pigeon
                     }
                     if (g.Value[i].Comparer2 != null)
                     {
-                        awsh.Cells[i + 2, 5].FormulaR1C1 = $"={g.Value[i].Comparer1Amount} - {g.Value[i].Comparer2Amount}";
+                        awsh.Cells[i + 2, 5].FormulaR1C1 = $"={g.Value[i].Comparer1Amount}-{g.Value[i].Comparer2Amount}";
                     }
                     awsh.Cells.HorizontalAlignment = HorizontalAlignment.Center;
                     awsh.Columns.AutoFit();
                     awsh.Rows.AutoFit();
                 }
             }
-
             wb.SaveAs(CurrentDirectory + $"\\results\\result_{runningTime.ToString("yyyyMMdd_HHmm")}.xlsx", XlFileFormat.xlWorkbookDefault, misValue, misValue, misValue, misValue, XlSaveAsAccessMode.xlExclusive, misValue, misValue, misValue, misValue, misValue);
             wb.Close(true, misValue, misValue);
             app.Quit();
