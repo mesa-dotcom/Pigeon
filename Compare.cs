@@ -35,118 +35,137 @@ namespace Pigeon
 
         private void Starting()
         {
-            Dictionary<string, List<Result>> grouppedResults = new Dictionary<string, List<Result>>();
-            foreach (KeyValuePair<string, List<string>> entry in dict)
+            try
             {
-                List<string> eachPossiblePair = new List<string>(possiblePair);
-                List<Result> results = new List<Result>();
-                // Getting Data
-                if (entry.Value.Count != 1) {
-                    AddTextToDebug(entry.Key);
-                    AddTextToDebug(" + Getting data from the files of the store.");
-                    List<TnxBank> tnxBanks = new List<TnxBank>();
-                    List<Slip> slips = new List<Slip>();
-                    List<SAP> SAPs = new List<SAP>();
-                    List<CommonSum> bankSums = new List<CommonSum>();
-                    List<SumByInterX> bankSumsByInterX = new List<SumByInterX>();
-                    List<CommonSum> sapSums = new List<CommonSum>();
-                    List<CommonSum> slipSums = new List<CommonSum>();
-
-                    if (entry.Value.Contains("Bank"))
-                    {
-                        AddTextToDebug("  - reading file bank...");
-                        tnxBanks = GetTnxBank(entry.Key + "_Bank");
-                    } else
-                    {
-                        eachPossiblePair.Remove("BankSAP");
-                        eachPossiblePair.Remove("BankStoreSlip");
-                    }
-                    if (entry.Value.Contains("SAP"))
-                    {
-                        AddTextToDebug("  - reading file sap...");
-                        SAPs = GetSAPs(entry.Key + "_SAP");
-
-                    } else
-                    {
-                        eachPossiblePair.Remove("BankSAP");
-                        eachPossiblePair.Remove("SAPStoreSlip");
-                    }
-                    if (entry.Value.Contains("StoreSlip"))
-                    {
-                        AddTextToDebug("  - reading file store slip...");
-                        slips = GetSlips(entry.Key + "_StoreSlip");
-                    } else
-                    {
-                        eachPossiblePair.Remove("BankStoreSlip");
-                        eachPossiblePair.Remove("SAPStoreSlip");
-                    }
-
-                    // Calucate sum group by
-                    AddTextToDebug(" + Calculate total from the files");
-                    if (tnxBanks.Count != 0)
-                    {
-                        AddTextToDebug("  - get total of the bank file...");
-                        // filter ACLEDA Bank Plc.
-                        bankSumsByInterX = tnxBanks.OrderBy(tb => tb.CutoffDate).GroupBy(tb => new { tb.CutoffDate, tb.InterXBank }).Select(i => new SumByInterX
-                        {
-                            CutoffDate = i.Key.CutoffDate,
-                            InterXBank = i.Key.InterXBank,
-                            Total = i.Sum(x => x.PaymentAmount)
-                        }).ToList();
-                        bankSums = tnxBanks.OrderBy(tb => tb.CutoffDate).GroupBy(tb => tb.CutoffDate).Select(i => new CommonSum
-                        {
-                            CutoffDate = i.Key,
-                            Total = i.Sum(x => x.PaymentAmount)
-                        }).ToList();
-                    }
-                    if (SAPs.Count != 0)
-                    {
-                        AddTextToDebug("  - get total of the sap file...");
-                        sapSums = SAPs.OrderBy(s => s.DocDate).GroupBy(s => s.DocDate).Select(i => new CommonSum {
-                        CutoffDate = i.Key,
-                        Total = i.Sum(x => x.AmountInLocalCur)
-                    }).ToList();
-                    }
-                    if (slips.Count != 0)
-                    {
-                        AddTextToDebug("  - get total of the slip file...");
-                        slipSums = slips.OrderBy(s => s.CutoffDate).GroupBy(s => s.CutoffDate).Select(i => new CommonSum {
-                            CutoffDate = i.Key,
-                            Total = i.Sum(x => x.Amount)
-                        }).ToList();
-                    }
-
-                    // start comparing
-                    AddTextToDebug(" + Compare the possible pair");
-                    eachPossiblePair.ForEach(pair =>
-                    {
-                        if (pair == "BankSAP")
-                        {
-                            AddTextToDebug("  - between Bank and SAP (Bank - SAP)");
-                            results.AddRange(CompareBankSAP(bankSumsByInterX, SAPs, entry.Key));
-                        } else if ( pair == "BankStoreSlip")
-                        {
-                            AddTextToDebug("  - between Bank and Store Slip (Bank - Slip)");
-                            results.AddRange(CompareBankStoreSlip(bankSums, slipSums, entry.Key));
-                        } else
-                        {
-                            AddTextToDebug("  - between SAP and Store Slip (SAP - StoreSlip)");
-                            results.Concat(CompareSAPStoreSlip(sapSums, slipSums, entry.Key));
-                        } 
-                    });
-                    grouppedResults.Add(entry.Key, results.OrderBy(r => r.CutoffDate).ThenBy(r => r.SRCBank).ThenBy(r => r.Comparer1).ToList()); 
-                } else if (entry.Value.Count == 1)
+                Dictionary<string, List<Result>> grouppedResults = new Dictionary<string, List<Result>>();
+                foreach (KeyValuePair<string, List<string>> entry in dict)
                 {
-                    AddTextToDebug($"There is only one file, {entry.Key} {entry.Value[0]}, cannot compare to anything.");
+                    List<string> eachPossiblePair = new List<string>(possiblePair);
+                    List<Result> results = new List<Result>();
+                    // Getting Data
+                    if (entry.Value.Count != 1)
+                    {
+                        AddTextToDebug(entry.Key);
+                        AddTextToDebug(" + Getting data from the files of the store.");
+                        List<TnxBank> tnxBanks = new List<TnxBank>();
+                        List<Slip> slips = new List<Slip>();
+                        List<SAP> SAPs = new List<SAP>();
+                        List<CommonSum> bankSums = new List<CommonSum>();
+                        List<SumByInterX> bankSumsByInterX = new List<SumByInterX>();
+                        List<CommonSum> sapSums = new List<CommonSum>();
+                        List<CommonSum> slipSums = new List<CommonSum>();
+
+                        if (entry.Value.Contains("Bank"))
+                        {
+                            AddTextToDebug("  - reading file bank...");
+                            tnxBanks = GetTnxBank(entry.Key + "_Bank");
+                        }
+                        else
+                        {
+                            eachPossiblePair.Remove("BankSAP");
+                            eachPossiblePair.Remove("BankStoreSlip");
+                        }
+                        if (entry.Value.Contains("SAP"))
+                        {
+                            AddTextToDebug("  - reading file sap...");
+                            SAPs = GetSAPs(entry.Key + "_SAP");
+
+                        }
+                        else
+                        {
+                            eachPossiblePair.Remove("BankSAP");
+                            eachPossiblePair.Remove("SAPStoreSlip");
+                        }
+                        if (entry.Value.Contains("StoreSlip"))
+                        {
+                            AddTextToDebug("  - reading file store slip...");
+                            slips = GetSlips(entry.Key + "_StoreSlip");
+                        }
+                        else
+                        {
+                            eachPossiblePair.Remove("BankStoreSlip");
+                            eachPossiblePair.Remove("SAPStoreSlip");
+                        }
+
+                        // Calucate sum group by
+                        AddTextToDebug(" + Calculate total from the files");
+                        if (tnxBanks.Count != 0)
+                        {
+                            AddTextToDebug("  - get total of the bank file...");
+                            // filter ACLEDA Bank Plc.
+                            bankSumsByInterX = tnxBanks.OrderBy(tb => tb.CutoffDate).GroupBy(tb => new { tb.CutoffDate, tb.InterXBank }).Select(i => new SumByInterX
+                            {
+                                CutoffDate = i.Key.CutoffDate,
+                                InterXBank = i.Key.InterXBank,
+                                Total = i.Sum(x => x.PaymentAmount)
+                            }).ToList();
+                            bankSums = tnxBanks.OrderBy(tb => tb.CutoffDate).GroupBy(tb => tb.CutoffDate).Select(i => new CommonSum
+                            {
+                                CutoffDate = i.Key,
+                                Total = i.Sum(x => x.PaymentAmount)
+                            }).ToList();
+                        }
+                        if (SAPs.Count != 0)
+                        {
+                            AddTextToDebug("  - get total of the sap file...");
+                            sapSums = SAPs.OrderBy(s => s.DocDate).GroupBy(s => s.DocDate).Select(i => new CommonSum
+                            {
+                                CutoffDate = i.Key,
+                                Total = i.Sum(x => x.AmountInLocalCur)
+                            }).ToList();
+                        }
+                        if (slips.Count != 0)
+                        {
+                            AddTextToDebug("  - get total of the slip file...");
+                            slipSums = slips.OrderBy(s => s.CutoffDate).GroupBy(s => s.CutoffDate).Select(i => new CommonSum
+                            {
+                                CutoffDate = i.Key,
+                                Total = i.Sum(x => x.Amount)
+                            }).ToList();
+                        }
+
+                        // start comparing
+                        AddTextToDebug(" + Compare the possible pair");
+                        eachPossiblePair.ForEach(pair =>
+                        {
+                            if (pair == "BankSAP")
+                            {
+                                AddTextToDebug("  - between Bank and SAP (Bank - SAP)");
+                                results.AddRange(CompareBankSAP(bankSumsByInterX, SAPs, entry.Key));
+                            }
+                            else if (pair == "BankStoreSlip")
+                            {
+                                AddTextToDebug("  - between Bank and Store Slip (Bank - Slip)");
+                                results.AddRange(CompareBankStoreSlip(bankSums, slipSums, entry.Key));
+                            }
+                            else
+                            {
+                                AddTextToDebug("  - between SAP and Store Slip (SAP - StoreSlip)");
+                                results.Concat(CompareSAPStoreSlip(sapSums, slipSums, entry.Key));
+                            }
+                        });
+                        grouppedResults.Add(entry.Key, results.OrderBy(r => r.CutoffDate).ThenBy(r => r.SRCBank).ThenBy(r => r.Comparer1).ToList());
+                    }
+                    else if (entry.Value.Count == 1)
+                    {
+                        AddTextToDebug($"There is only one file, {entry.Key} {entry.Value[0]}, cannot compare to anything.");
+                    }
+                }
+                btnSaveDebug.Enabled = true;
+                if (grouppedResults.Count != 0 || dict.Count != 0)
+                {
+                    CreateExcelResult(grouppedResults);
+                }
+                lblProcessDesc.Text = "...";
+                AddTextToDebug($"****** Program is finishing {DateTime.Now.ToString()} ******");
+            }
+            catch (Exception exc)
+            {
+                if (MessageBox.Show(exc.Message, "Error occurs.", MessageBoxButtons.OK) == DialogResult.OK)
+                {
+                    Close();
                 }
             }
-            btnSaveDebug.Enabled = true;
-            if (grouppedResults.Count != 0 || dict.Count != 0)
-            {
-                CreateExcelResult(grouppedResults);
-            }
-            lblProcessDesc.Text = "...";
-            AddTextToDebug($"****** Program is finishing {DateTime.Now.ToString()} ******");
         }
 
         private void CreateExcelResult(Dictionary<string, List<Result>> gr)
@@ -491,7 +510,7 @@ namespace Pigeon
             {
                 wb.Close(0);
                 app.Quit();
-                throw new Exception(filename + " column (" + ccn +") is not correctly set.");
+                throw new Exception(filename + " column name is incorrect (" + ccn +").");
             }
             int running_row = 2;
             try
@@ -544,7 +563,7 @@ namespace Pigeon
             {
                 wb.Close(0);
                 app.Quit();
-                throw new Exception(filename + " column (" + ccn + ") is not correctly set.");
+                throw new Exception(filename + " column name is incorrect (" + ccn + ").");
             }
             int running_row = 2;
             try
