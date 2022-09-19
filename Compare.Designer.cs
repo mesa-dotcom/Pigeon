@@ -33,13 +33,12 @@
             this.lblProcess = new System.Windows.Forms.Label();
             this.lblProcessDesc = new System.Windows.Forms.Label();
             this.btnSaveDebug = new System.Windows.Forms.Button();
-            this.btnSaveResult = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // tbDebug
             // 
             this.tbDebug.Font = new System.Drawing.Font("Times New Roman", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.tbDebug.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.tbDebug.ForeColor = System.Drawing.SystemColors.Desktop;
             this.tbDebug.Location = new System.Drawing.Point(12, 50);
             this.tbDebug.Multiline = true;
             this.tbDebug.Name = "tbDebug";
@@ -69,28 +68,20 @@
             // 
             // btnSaveDebug
             // 
+            this.btnSaveDebug.Enabled = false;
             this.btnSaveDebug.Location = new System.Drawing.Point(546, 9);
             this.btnSaveDebug.Name = "btnSaveDebug";
             this.btnSaveDebug.Size = new System.Drawing.Size(94, 29);
             this.btnSaveDebug.TabIndex = 3;
             this.btnSaveDebug.Text = "Save Log";
             this.btnSaveDebug.UseVisualStyleBackColor = true;
-            // 
-            // btnSaveResult
-            // 
-            this.btnSaveResult.Location = new System.Drawing.Point(263, 423);
-            this.btnSaveResult.Name = "btnSaveResult";
-            this.btnSaveResult.Size = new System.Drawing.Size(120, 29);
-            this.btnSaveResult.TabIndex = 4;
-            this.btnSaveResult.Text = "Save Result";
-            this.btnSaveResult.UseVisualStyleBackColor = true;
+            this.btnSaveDebug.Click += new System.EventHandler(this.btnSaveDebug_Click);
             // 
             // Compare
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(656, 464);
-            this.Controls.Add(this.btnSaveResult);
+            this.ClientSize = new System.Drawing.Size(656, 433);
             this.Controls.Add(this.btnSaveDebug);
             this.Controls.Add(this.lblProcessDesc);
             this.Controls.Add(this.lblProcess);
@@ -113,6 +104,5 @@
         private Label lblProcess;
         private Label lblProcessDesc;
         private Button btnSaveDebug;
-        private Button btnSaveResult;
     }
 }

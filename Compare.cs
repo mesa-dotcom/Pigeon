@@ -20,14 +20,17 @@ namespace Pigeon
     {
         Dictionary<string, List<string>> dict = new Dictionary<string, List<string>>();
         Microsoft.Office.Interop.Excel.Application app = new Microsoft.Office.Interop.Excel.Application();
-        public int cellsIgnore = 5;
+        public int cellsIgnore = 0;
         public List<string> possiblePair = new List<string> { "BankSAP", "BankStoreSlip", "SAPStoreSlip" };
+        public DateTime runningTime = DateTime.MinValue;
+        public string CurrentDirectory = Environment.CurrentDirectory;
         public Compare(Dictionary<string, List<string>> dict_param)
         {
             dict = dict_param;
+            runningTime = DateTime.Now;
             InitializeComponent();
             tbDebug.Enter += (s, e) => { tbDebug.Parent.Focus(); };
-            tbDebug.Text = "****** Program is starting " + DateTime.Now.ToString() + " ******";
+            tbDebug.Text = "****** Program is starting " + runningTime.ToString() + " ******";
         }
 
         private void Starting()
@@ -137,7 +140,8 @@ namespace Pigeon
                     AddTextToDebug($"There is only one file, {entry.Key} {entry.Value[0]}, cannot compare to anything.");
                 }
             }
-            if (grouppedResults.Count != 0)
+            btnSaveDebug.Enabled = true;
+            if (grouppedResults.Count != 0 || dict.Count != 0)
             {
                 CreateExcelResult(grouppedResults);
             }
@@ -150,9 +154,23 @@ namespace Pigeon
             Workbook wb = null;
             object misValue = System.Reflection.Missing.Value;
             wb = app.Workbooks.Add(misValue);
+            Worksheet firstSheet = wb.ActiveSheet as Worksheet;
+            firstSheet.Name = "File Info";
+            firstSheet.Cells[1, 1] = "Store";
+            firstSheet.Cells[1, 2] = "Bank File";
+            firstSheet.Cells[1, 3] = "SAP File";
+            firstSheet.Cells[1, 4] = "Store Slip File";
+            foreach (var x in dict.Select((Entry, Index) => new { Entry, Index }))
+            {
+                firstSheet.Cells[x.Index + 2, 1] = x.Entry.Key;
+                firstSheet.Cells[x.Index + 2, 2] = x.Entry.Value.Contains("Bank") ? "Has" : "-";
+                firstSheet.Cells[x.Index + 2, 3] = x.Entry.Value.Contains("SAP") ? "Has" : "-";
+                firstSheet.Cells[x.Index + 2, 4] = x.Entry.Value.Contains("StoreSlip") ? "Has" : "-";
+            }
             foreach (KeyValuePair<string, List<Result>> g in gr)
             {
-                Worksheet awsh = wb.ActiveSheet as Worksheet;
+                Worksheet awsh = wb.Sheets.Add(misValue, misValue, 1, misValue)
+                        as Worksheet;
                 awsh.Name = g.Key;
                 awsh.Cells[1, 1] = "Date";
                 awsh.Cells[1, 2] = "SRC_BANK";
@@ -183,12 +201,12 @@ namespace Pigeon
                         awsh.Cells[i + 2, 5].FormulaR1C1 = $"={g.Value[i].Comparer1Amount} - {g.Value[i].Comparer2Amount}";
                     }
                     awsh.Cells.HorizontalAlignment = HorizontalAlignment.Center;
-                    awsh.Cells.AutoFit();
+                    awsh.Columns.AutoFit();
+                    awsh.Rows.AutoFit();
                 }
             }
 
-            var currenctDirectory = Environment.CurrentDirectory;
-            wb.SaveAs(currenctDirectory + $"\\results\\result_{DateTime.Now.ToString("yyyyMMdd_HHmm")}.xlsx", XlFileFormat.xlWorkbookDefault, misValue, misValue, misValue, misValue, XlSaveAsAccessMode.xlExclusive, misValue, misValue, misValue, misValue, misValue);
+            wb.SaveAs(CurrentDirectory + $"\\results\\result_{runningTime.ToString("yyyyMMdd_HHmm")}.xlsx", XlFileFormat.xlWorkbookDefault, misValue, misValue, misValue, misValue, XlSaveAsAccessMode.xlExclusive, misValue, misValue, misValue, misValue, misValue);
             wb.Close(true, misValue, misValue);
             app.Quit();
         }
@@ -422,7 +440,7 @@ namespace Pigeon
         private List<TnxBank> GetTnxBank(string filename)
         {
             List<TnxBank> tnxBanks = new List<TnxBank>();
-            string path = Environment.CurrentDirectory + "\\files\\" + filename;
+            string path = CurrentDirectory + "\\files\\" + filename;
             Workbook wb = app.Workbooks.Open(path);
             Worksheet wsh = wb.Worksheets[1];
             Microsoft.Office.Interop.Excel.Range cells = wsh.Cells;
@@ -464,7 +482,7 @@ namespace Pigeon
         private List<SAP> GetSAPs(string filename)
         {
             List<SAP> SAPs = new List<SAP>();
-            string path = Environment.CurrentDirectory + "\\files\\" + filename;
+            string path = CurrentDirectory + "\\files\\" + filename;
             Workbook wb = app.Workbooks.Open(path);
             Worksheet wsh = wb.Worksheets[1];
             Microsoft.Office.Interop.Excel.Range cells = wsh.Cells;
@@ -516,7 +534,7 @@ namespace Pigeon
         private List<Slip> GetSlips(string filename)
         {
             List<Slip> slips = new List<Slip>();
-            string path = Environment.CurrentDirectory + "\\files\\" + filename;
+            string path = CurrentDirectory + "\\files\\" + filename;
             Workbook wb = app.Workbooks.Open(path);
             Worksheet wsh = wb.Worksheets[1];
             Microsoft.Office.Interop.Excel.Range cells = wsh.Cells;
@@ -583,6 +601,25 @@ namespace Pigeon
         {
             System.Threading.Thread.Sleep(1);
             Starting();
+        }
+
+        private void btnSaveDebug_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // create log text file
+                using (FileStream fs = File.Create(CurrentDirectory + $"\\results\\log_{runningTime.ToString("yyyyMMdd_HHmm")}.txt"))
+                {
+                    string str = tbDebug.Text;
+                    Byte[] data = new UTF8Encoding(true).GetBytes(str);
+                    fs.Write(data, 0, data.Length);
+                }
+            }
+            catch (Exception exc)
+            {
+                MessageBox.Show(exc.Message);
+            }
+            MessageBox.Show("Log file is saved in directory results.");
         }
     }
 }
