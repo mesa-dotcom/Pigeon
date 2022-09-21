@@ -18,15 +18,15 @@ namespace Pigeon
 {
     public partial class Compare : Form
     {
-        Dictionary<string, List<string>> dict = new Dictionary<string, List<string>>();
-        Microsoft.Office.Interop.Excel.Application app = new Microsoft.Office.Interop.Excel.Application();
-        public int cellsIgnore = 0;
-        public List<string> possiblePair = new List<string> { "BankSAP", "BankStoreSlip", "SAPStoreSlip" };
+        Dictionary<string, List<string>> dict = new();
+        Microsoft.Office.Interop.Excel.Application app = new();
         public DateTime runningTime = DateTime.MinValue;
         public string CurrentDirectory = Environment.CurrentDirectory;
-        public Compare(Dictionary<string, List<string>> dict_param)
+        public bool HasSAP = false;
+        public Compare(Dictionary<string, List<string>> dict_param, bool hs)
         {
             dict = dict_param;
+            HasSAP = hs;
             runningTime = DateTime.Now;
             InitializeComponent();
             tbDebug.Enter += (s, e) => { tbDebug.Parent.Focus(); };
@@ -37,81 +37,38 @@ namespace Pigeon
         {
             try
             {
-                List<Result> noComparerResults = new List<Result>();  
-                Dictionary<string, List<Result>> grouppedResults = new Dictionary<string, List<Result>>();
+                List<Result> noComparerResults = new();
+                List<Result> bankSAPOverall = new();
+                List<TnxBank> allTnxBanks = new();
+                Dictionary<string, List<Result>> grouppedResults = new();
+                AddTextToDebug("First compare Bank and StoreSlip");
                 foreach (KeyValuePair<string, List<string>> entry in dict)
                 {
-                    List<string> eachPossiblePair = new List<string>(possiblePair);
-                    List<Result> results = new List<Result>();
-                    // Getting Data
+                    List<Result> results = new();
                     if (entry.Value.Count != 1)
                     {
                         AddTextToDebug(entry.Key);
                         AddTextToDebug(" + Getting data from the files of the store.");
-                        List<TnxBank> tnxBanks = new List<TnxBank>();
-                        List<Slip> slips = new List<Slip>();
-                        List<SAP> SAPs = new List<SAP>();
-                        List<CommonSum> bankSums = new List<CommonSum>();
-                        List<SumByInterX> bankSumsByInterX = new List<SumByInterX>();
-                        List<CommonSum> sapSums = new List<CommonSum>();
-                        List<CommonSum> slipSums = new List<CommonSum>();
-                        if (entry.Value.Contains("Bank"))
-                        {
-                            AddTextToDebug("  - reading file bank...");
-                            tnxBanks = GetTnxBank(entry.Key + "_Bank");
-                        }
-                        else
-                        {
-                            eachPossiblePair.Remove("BankSAP");
-                            eachPossiblePair.Remove("BankStoreSlip");
-                        }
-                        if (entry.Value.Contains("SAP"))
-                        {
-                            AddTextToDebug("  - reading file sap...");
-                            SAPs = GetSAPs(entry.Key + "_SAP");
-
-                        }
-                        else
-                        {
-                            eachPossiblePair.Remove("BankSAP");
-                            eachPossiblePair.Remove("SAPStoreSlip");
-                        }
-                        if (entry.Value.Contains("StoreSlip"))
-                        {
-                            AddTextToDebug("  - reading file store slip...");
-                            slips = GetSlips(entry.Key + "_StoreSlip");
-                        }
-                        else
-                        {
-                            eachPossiblePair.Remove("BankStoreSlip");
-                            eachPossiblePair.Remove("SAPStoreSlip");
-                        }
+                        List<TnxBank> tnxBanks = new();
+                        List<Slip> slips = new();
+                        List<CommonSum> bankSums = new();
+                        List<CommonSum> slipSums = new();
+                        AddTextToDebug("  - reading file bank...");
+                        tnxBanks = GetTnxBank(entry.Key + "_Bank");
+                        AddTextToDebug("  - reading file store slip...");
+                        slips = GetSlips(entry.Key + "_StoreSlip");
 
                         // Calucate sum group by
                         AddTextToDebug(" + Calculate total from the files");
                         if (tnxBanks.Count != 0)
                         {
+                            allTnxBanks.AddRange(tnxBanks);
                             AddTextToDebug("  - get total of the bank file...");
                             // filter ACLEDA Bank Plc.
-                            bankSumsByInterX = tnxBanks.OrderBy(tb => tb.CutoffDate).GroupBy(tb => new { tb.CutoffDate, tb.InterXBank }).Select(i => new SumByInterX
-                            {
-                                CutoffDate = i.Key.CutoffDate,
-                                InterXBank = i.Key.InterXBank,
-                                Total = i.Sum(x => x.PaymentAmount)
-                            }).ToList();
                             bankSums = tnxBanks.OrderBy(tb => tb.CutoffDate).GroupBy(tb => tb.CutoffDate).Select(i => new CommonSum
                             {
                                 CutoffDate = i.Key,
                                 Total = i.Sum(x => x.PaymentAmount)
-                            }).ToList();
-                        }
-                        if (SAPs.Count != 0)
-                        {
-                            AddTextToDebug("  - get total of the sap file...");
-                            sapSums = SAPs.OrderBy(s => s.DocDate).GroupBy(s => s.DocDate).Select(i => new CommonSum
-                            {
-                                CutoffDate = i.Key,
-                                Total = i.Sum(x => x.AmountInLocalCur)
                             }).ToList();
                         }
                         if (slips.Count != 0)
@@ -126,24 +83,8 @@ namespace Pigeon
 
                         // start comparing
                         AddTextToDebug(" + Compare the possible pair");
-                        eachPossiblePair.ForEach(pair =>
-                        {
-                            if (pair == "BankSAP")
-                            {
-                                AddTextToDebug("  - between Bank and SAP (Bank - SAP)");
-                                results.AddRange(CompareBankSAP(bankSumsByInterX, SAPs, entry.Key));
-                            }
-                            else if (pair == "BankStoreSlip")
-                            {
-                                AddTextToDebug("  - between Bank and Store Slip (Bank - Slip)");
-                                results.AddRange(CompareBankStoreSlip(bankSums, slipSums, entry.Key));
-                            }
-                            //else
-                            //{
-                            //    AddTextToDebug("  - between SAP and Store Slip (SAP - StoreSlip)");
-                            //    results.AddRange(CompareSAPStoreSlip(sapSums, slipSums, entry.Key));
-                            //}
-                        });
+                        AddTextToDebug("  - between Bank and Store Slip (Bank - Slip)");
+                        results.AddRange(CompareBankStoreSlip(bankSums, slipSums, entry.Key));
                         grouppedResults.Add(entry.Key, results.Where(x => x.Comparer2 != null).OrderBy(r => r.CutoffDate).ThenBy(r => r.SRCBank).ThenBy(r => r.Comparer1).ToList());
                         noComparerResults = (from res in results
                                              where res.Comparer2 == null
@@ -152,19 +93,52 @@ namespace Pigeon
                                              orderby res.Comparer1
                                              select res).ToList();
                     }
-                    else if (entry.Value.Count == 1)
+                    else if (entry.Value.Count == 1 && !HasSAP)
                     {
                         AddTextToDebug($"There is only one file, {entry.Key} {entry.Value[0]}, cannot compare to anything.");
+                    }
+
+                    List<SAP> SAPs = new();
+                    List<SumByInterX> sapSums = new();
+
+                    if (HasSAP)
+                    {
+                        AddTextToDebug("SAP");
+                        SAPs = GetSAPs("SAP");
+                        AddTextToDebug(" - get data from SAP file");
+                        if (SAPs.Count != 0)
+                        {
+                            AddTextToDebug(" - sum amount SAP by cutoff date");
+                            sapSums = SAPs.OrderBy(s => s.DocDate).GroupBy(s => new { s.DocDate, s.InterXBank }).Select(i => new SumByInterX
+                            {
+                                CutoffDate = i.Key.DocDate,
+                                InterXBank = i.Key.InterXBank,
+                                Total = i.Sum(x => x.AmountInLocalCur)
+                            }).ToList();
+                            AddTextToDebug(" - sum amount BANK by cutoff date");
+                            List<SumByInterX> allSumBanksByInterX = allTnxBanks.OrderBy(s => s.CutoffDate).GroupBy(s => new { s.CutoffDate, s.InterXBank }).Select(i => new SumByInterX
+                            {
+                                CutoffDate = i.Key.CutoffDate,
+                                InterXBank = i.Key.InterXBank,
+                                Total = i.Sum(x => x.PaymentAmount)
+                            }).ToList();
+                            AddTextToDebug(" - compare SAP and Bank overall");
+                            bankSAPOverall = (from bso in CompareBankSAPAll(allSumBanksByInterX, sapSums)
+                                              where bso.Comparer2 != null && bso.Comparer1 != null
+                                              orderby bso.CutoffDate
+                                              orderby bso.SRCBank
+                                              select bso).ToList();
+                        }
                     }
                 }
                 btnSaveDebug.Enabled = true;
                 if (grouppedResults.Count != 0 || dict.Count != 0)
                 {
                     AddTextToDebug(" + Creating file excel result");
-                    CreateExcelResult(grouppedResults, noComparerResults);
+                    CreateExcelResult(grouppedResults, bankSAPOverall,noComparerResults);
                 }
                 lblProcessDesc.Text = "...";
-                AddTextToDebug($"****** Program is finishing {DateTime.Now.ToString()} ******");
+                AddTextToDebug($"****** Program is finishing {DateTime.Now} ******");
             }
             catch (Exception exc)
             {
@@ -175,7 +149,7 @@ namespace Pigeon
             }
         }
 
-        private void CreateExcelResult(Dictionary<string, List<Result>> gr, List<Result> noComparer)
+        private void CreateExcelResult(Dictionary<string, List<Result>> gr, List<Result> resBS, List<Result> noComparer)
         {
             Workbook wb = null;
             object misValue = System.Reflection.Missing.Value;
@@ -183,35 +157,50 @@ namespace Pigeon
             AddTextToDebug("  - creating file info sheet");
             Worksheet fileInfo = wb.ActiveSheet as Worksheet;
             fileInfo.Name = "File Info";
-            fileInfo.Cells[1, 1] = "Store";
-            fileInfo.Cells[1, 2] = "Bank File";
-            fileInfo.Cells[1, 3] = "SAP File";
-            fileInfo.Cells[1, 4] = "Store Slip File";
+            fileInfo.Cells[1, 1] = "File SAP";
+            fileInfo.Cells[1, 2] = HasSAP ? "Has" : "-";
+            fileInfo.Cells[3, 1] = "Store";
+            fileInfo.Cells[3, 2] = "Bank File";
+            fileInfo.Cells[3, 3] = "Store Slip File";
             foreach (var x in dict.Select((Entry, Index) => new { Entry, Index }))
             {
-                fileInfo.Cells[x.Index + 2, 1] = x.Entry.Key;
-                fileInfo.Cells[x.Index + 2, 2] = x.Entry.Value.Contains("Bank") ? "Has" : "-";
-                fileInfo.Cells[x.Index + 2, 3] = x.Entry.Value.Contains("SAP") ? "Has" : "-";
-                fileInfo.Cells[x.Index + 2, 4] = x.Entry.Value.Contains("StoreSlip") ? "Has" : "-";
+                fileInfo.Cells[x.Index + 4, 1] = x.Entry.Key;
+                fileInfo.Cells[x.Index + 4, 2] = x.Entry.Value.Contains("Bank") ? "Has" : "-";
+                fileInfo.Cells[x.Index + 4, 3] = x.Entry.Value.Contains("StoreSlip") ? "Has" : "-";
             }
-            if (noComparer.Count != 0)
-            {
-                AddTextToDebug("  - creating no comparer sheet");
-                Worksheet noComparerSheet = wb.Sheets.Add(misValue, misValue, 1, misValue) as Worksheet;
-                noComparerSheet.Name = "No Comparer";
-                noComparerSheet.Cells[1, 1] = "Store";
-                noComparerSheet.Cells[1, 2] = "Cutoff Date";
-                noComparerSheet.Cells[1, 3] = "File Type";
-                noComparerSheet.Cells[1, 4] = "Total";
-                for (int i = 0; i < noComparer.Count; i++)
-                {
-                    noComparerSheet.Cells[i + 2, 1] = noComparer[i].Store;
-                    noComparerSheet.Cells[i + 2, 2] = noComparer[i].CutoffDate.ToString("dd-MMM-yyyy");
-                    noComparerSheet.Cells[i + 2, 3] = noComparer[i].Comparer1;
-                    noComparerSheet.Cells[i + 2, 4] = noComparer[i].Comparer1Amount;
-                }
 
+            AddTextToDebug("  - creating no comparer sheet");
+            Worksheet noComparerSheet = wb.Sheets.Add(misValue, misValue, 1, misValue) as Worksheet;
+            noComparerSheet.Name = "No Comparer";
+            noComparerSheet.Cells[1, 1] = "Store";
+            noComparerSheet.Cells[1, 2] = "Cutoff Date";
+            noComparerSheet.Cells[1, 3] = "File Type";
+            noComparerSheet.Cells[1, 4] = "Total";
+            for (int i = 0; i < noComparer.Count; i++)
+            {
+                noComparerSheet.Cells[i + 2, 1] = noComparer[i].Store;
+                noComparerSheet.Cells[i + 2, 2] = noComparer[i].CutoffDate.ToString("dd-MMM-yyyy");
+                noComparerSheet.Cells[i + 2, 3] = noComparer[i].Comparer1;
+                noComparerSheet.Cells[i + 2, 4] = noComparer[i].Comparer1Amount;
             }
+
+            AddTextToDebug("  - createing Bank - SAP compare sheet");
+            Worksheet bsSheet = wb.Sheets.Add(misValue, misValue, 1, misValue) as Worksheet;
+            bsSheet.Name = "Bank - SAP (All Store)";
+            bsSheet.Cells[1, 1] = "Cutoff Date";
+            bsSheet.Cells[1, 2] = "SRC_BANK";
+            bsSheet.Cells[1, 3] = "Bank";
+            bsSheet.Cells[1, 4] = "SAP";
+            bsSheet.Cells[1, 5] = "Diff.";
+            for (int i = 0; i < resBS.Count; i++)
+            {
+                bsSheet.Cells[i + 2, 1] = resBS[i].CutoffDate.ToString("dd-MMM-yyyy");
+                bsSheet.Cells[i + 2, 2] = resBS[i].SRCBank == "InnerBank" ? "ACLEDA Bank Plc. (TC)" : "Other Bank (KHQR)";
+                bsSheet.Cells[i + 2, 3] = resBS[i].Comparer1Amount;
+                bsSheet.Cells[i + 2, 4] = resBS[i].Comparer2Amount;
+                bsSheet.Cells[i + 2, 5].FormulaR1C1 = $"={resBS[i].Comparer1Amount}-{resBS[i].Comparer2Amount}";
+            }
+
             foreach (KeyValuePair<string, List<Result>> g in gr)
             {
                 AddTextToDebug($"  - creating result {g.Key} sheet");
@@ -255,14 +244,14 @@ namespace Pigeon
             app.Quit();
         }
 
-        private List<Result> CompareBankSAP(List<SumByInterX> sbixs, List<SAP> saps, string store)
+        private List<Result> CompareBankSAPAll(List<SumByInterX> sbixs, List<SumByInterX> saps, string store = "")
         {
             List<Result> res = new List<Result>();
             lblProcessDesc.Text = "comparing bank and sap by cutoff date and bank type";
             // full outer join by left join and union
             var res1 = from sbix in sbixs
                        join sap in saps
-                       on new { X = sbix.CutoffDate, Y = sbix.InterXBank } equals new { X = sap.DocDate, Y = sap.InterXBank }
+                       on new { X = sbix.CutoffDate, Y = sbix.InterXBank } equals new { X = sap.CutoffDate, Y = sap.InterXBank }
                        into JoinedList
                        from sap in JoinedList.DefaultIfEmpty()
                        select new
@@ -270,19 +259,19 @@ namespace Pigeon
                            CutoffDate = sbix.CutoffDate,
                            InterXBank = sbix.InterXBank,
                            BankSum = sbix?.Total,
-                           Sap = sap?.AmountInLocalCur
+                           Sap = sap?.Total
                        };
             var res2 = from sap in saps
                        join sbix in sbixs
-                       on new { X = sap.DocDate, Y = sap.InterXBank } equals new { X = sbix.CutoffDate, Y = sbix.InterXBank }
+                       on new { X = sap.CutoffDate, Y = sap.InterXBank } equals new { X = sbix.CutoffDate, Y = sbix.InterXBank }
                        into JoinedList
                        from sbix in JoinedList.DefaultIfEmpty()
                        select new
                        {
-                           CutoffDate = sap.DocDate,
+                           CutoffDate = sap.CutoffDate,
                            InterXBank = sap.InterXBank,
                            BankSum = sbix?.Total,
-                           Sap = sap?.AmountInLocalCur
+                           Sap = sap?.Total
                        };
             var res3 = res1.Union(res2).OrderBy(r => r.CutoffDate).ToList();
             res3.ForEach(r =>
@@ -488,7 +477,7 @@ namespace Pigeon
             Workbook wb = app.Workbooks.Open(path);
             Worksheet wsh = wb.Worksheets[1];
             Microsoft.Office.Interop.Excel.Range cells = wsh.Cells;
-            int running_row = cellsIgnore + 2;
+            int running_row = 2;
             try
             {
                 while (cells[running_row, 1].value != null)
@@ -507,7 +496,7 @@ namespace Pigeon
                     tnxBank.SRCBank = cells[running_row, 19].value;
                     tnxBank.InterXBank = cells[running_row, 19].value == "ACLEDA Bank Plc." ? "InnerBank" : "OtherBank"; 
                     tnxBanks.Add(tnxBank);
-                    ChangeLblProcessDesc($"reading row {running_row - cellsIgnore - 1} from file {filename}.");
+                    ChangeLblProcessDesc($"reading row {running_row - 1} from file {filename}.");
                     running_row++;
                 }
             }
@@ -544,13 +533,13 @@ namespace Pigeon
                 {
                     if (cells[running_row, 9].Text.Contains("(KHQR") || cells[running_row, 9].Text.Contains("(TC"))
                     {
-                        SAP sap = new SAP();
+                        SAP sap = new();
                         sap.Assignment = (string)cells[running_row, 1].Text;
                         sap.DocumentNo = cells[running_row, 2].Text;
                         sap.BusA = cells[running_row, 3].Text;
                         sap.Type = cells[running_row, 4].Text;
                         var txt = cells[running_row, 5].Text.Split(".");
-                        DateTime dt = new DateTime(Int32.Parse(txt[2]), Int32.Parse(txt[1]), Int32.Parse(txt[0]));
+                        DateTime dt = new (Int32.Parse(txt[2]), Int32.Parse(txt[1]), Int32.Parse(txt[0]));
                         sap.DocDate = DateOnly.FromDateTime(dt);
                         sap.PK = cells[running_row, 6].Text;
                         var amount = cells[running_row, 7].Value;

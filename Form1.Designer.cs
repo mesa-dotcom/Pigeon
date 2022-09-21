@@ -120,9 +120,9 @@
             this.label2.Font = new System.Drawing.Font("Times New Roman", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.label2.Location = new System.Drawing.Point(6, 63);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(149, 19);
+            this.label2.Size = new System.Drawing.Size(239, 19);
             this.label2.TabIndex = 1;
-            this.label2.Text = "SAP: \\files\\SAP.xlsx";
+            this.label2.Text = "Bank: \\files\\BXXXXX_Bank.xlsx";
             // 
             // label1
             // 
@@ -130,9 +130,9 @@
             this.label1.Font = new System.Drawing.Font("Times New Roman", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.label1.Location = new System.Drawing.Point(6, 26);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(239, 19);
+            this.label1.Size = new System.Drawing.Size(149, 19);
             this.label1.TabIndex = 0;
-            this.label1.Text = "Bank: \\files\\BXXXXX_Bank.xlsx";
+            this.label1.Text = "SAP: \\files\\SAP.xlsx";
             // 
             // btnCheckFile
             // 

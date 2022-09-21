@@ -54,7 +54,7 @@ namespace Pigeon
         private void btnCompare_Click(object sender, EventArgs e)
         {
             LookingFile();
-            Compare compare = new Compare(dict);
+            Compare compare = new Compare(dict, hasSAP);
             compare.ShowDialog();
         }
     }
