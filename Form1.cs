@@ -24,7 +24,7 @@ namespace Pigeon
                 var value = x[1].Split(".")[0];
                 if (key.StartsWith("B") && key.Length == 6)
                 {
-                    if (dict.Keys.Contains(key))
+                    if (dict.ContainsKey(key))
                     {
                         dict[key].Add(value);
                     }

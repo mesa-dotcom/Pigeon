@@ -55,7 +55,6 @@ namespace Pigeon
                         List<SumByInterX> bankSumsByInterX = new List<SumByInterX>();
                         List<CommonSum> sapSums = new List<CommonSum>();
                         List<CommonSum> slipSums = new List<CommonSum>();
-
                         if (entry.Value.Contains("Bank"))
                         {
                             AddTextToDebug("  - reading file bank...");
@@ -139,19 +138,19 @@ namespace Pigeon
                                 AddTextToDebug("  - between Bank and Store Slip (Bank - Slip)");
                                 results.AddRange(CompareBankStoreSlip(bankSums, slipSums, entry.Key));
                             }
-                            else
-                            {
-                                AddTextToDebug("  - between SAP and Store Slip (SAP - StoreSlip)");
-                                results.AddRange(CompareSAPStoreSlip(sapSums, slipSums, entry.Key));
-                            }
+                            //else
+                            //{
+                            //    AddTextToDebug("  - between SAP and Store Slip (SAP - StoreSlip)");
+                            //    results.AddRange(CompareSAPStoreSlip(sapSums, slipSums, entry.Key));
+                            //}
                         });
                         grouppedResults.Add(entry.Key, results.Where(x => x.Comparer2 != null).OrderBy(r => r.CutoffDate).ThenBy(r => r.SRCBank).ThenBy(r => r.Comparer1).ToList());
                         noComparerResults = (from res in results
-                                            where res.Comparer2 == null
-                                            where res.SRCBank == null
-                                            orderby res.Store
-                                            orderby res.Comparer1
-                                            select res).ToList();
+                                             where res.Comparer2 == null
+                                             orderby res.Store
+                                             orderby res.CutoffDate
+                                             orderby res.Comparer1
+                                             select res).ToList();
                     }
                     else if (entry.Value.Count == 1)
                     {
