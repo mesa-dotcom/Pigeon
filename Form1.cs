@@ -4,6 +4,8 @@ namespace Pigeon
     {
         string path = Environment.CurrentDirectory + "\\files";
         Dictionary<string, List<string>> dict = new Dictionary<string, List<string>>();
+        bool hasSAP = false;
+        List<string> list = new List<string> { "Bank", "StoreSlip"};
         public Pigeon()
         {
             InitializeComponent();
@@ -16,18 +18,25 @@ namespace Pigeon
         private void LookingFile()
         {
             string[] files = Directory.GetFiles(Environment.CurrentDirectory + "\\files", "*.*").Where(file => new string[] { ".xlsx", ".xls" }.Contains(Path.GetExtension(file))).ToArray();
+            if (files.FirstOrDefault(f => f.Contains("\\SAP.xls") || f.Contains("\\SAP.xlsx")) != null)
+            {
+                hasSAP = true;
+            } else
+            {
+                hasSAP = false;
+            }
             foreach (var f in files)
             {
                 var x = f.Split(Environment.CurrentDirectory + "\\files\\")[1].Split("_");
                 var key = x[0];
-                var value = x[1].Split(".")[0];
                 if (key.StartsWith("B") && key.Length == 6)
                 {
-                    if (dict.ContainsKey(key))
+                    var value = x[1].Split(".")[0];
+                    if (dict.ContainsKey(key) && list.Contains(value))
                     {
                         dict[key].Add(value);
                     }
-                    else
+                    else if (list.Contains(value))
                     {
                         dict.Add(key, new List<string> { value });
                     }
@@ -38,7 +47,7 @@ namespace Pigeon
         private void btnCheckFile_Click(object sender, EventArgs e)
         {
             LookingFile();
-            CheckFiles checkFiles = new CheckFiles(dict);
+            CheckFiles checkFiles = new CheckFiles(dict, hasSAP);
             checkFiles.ShowDialog();
         }
 

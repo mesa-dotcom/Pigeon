@@ -13,11 +13,23 @@ namespace Pigeon
     public partial class CheckFiles : Form
     {
         Dictionary<string, List<string>> dict = new Dictionary<string, List<string>>();
-        public CheckFiles(Dictionary<string, List<string>> dict_param)
+        public CheckFiles(Dictionary<string, List<string>> dict_param, bool hasSAP)
         {
             dict = dict_param;
             InitializeComponent();
+            checkFileSAP(hasSAP);
             FillingDatatable();
+        }
+
+        private void checkFileSAP(bool hasSAP)
+        {
+            if (hasSAP)
+            {
+                cbSAPFile.Checked = true;
+            } else
+            {
+                cbSAPFile.Checked = false;
+            }
         }
 
         private void FillingDatatable()
@@ -26,7 +38,6 @@ namespace Pigeon
             dt.Columns.Add("No");
             dt.Columns.Add("Store");
             dt.Columns.Add("Bank");
-            dt.Columns.Add("SAP");
             dt.Columns.Add("Store Slip");
             var i = 1;
             foreach (KeyValuePair<string, List<string>> entry in dict)
@@ -36,14 +47,12 @@ namespace Pigeon
                 dr["No"] = i;
                 dr["Store"] = entry.Key;
                 dr["Bank"] = files.Contains("Bank") ? "/" : "-";
-                dr["SAP"] = files.Contains("SAP") ? "/" : "-";
                 dr["Store Slip"] = files.Contains("StoreSlip") ? "/" : "-";
                 dt.Rows.Add(dr);
                 i++;
             }
             dtgvFilesList.DataSource = dt;
-            dtgvFilesList.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
-            dtgvFilesList.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
+            dtgvFilesList.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.ColumnHeader;
         }
     }
 }

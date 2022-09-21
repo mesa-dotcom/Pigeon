@@ -120,9 +120,9 @@
             this.label2.Font = new System.Drawing.Font("Times New Roman", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.label2.Location = new System.Drawing.Point(6, 63);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(229, 19);
+            this.label2.Size = new System.Drawing.Size(149, 19);
             this.label2.TabIndex = 1;
-            this.label2.Text = "SAP: \\files\\BXXXXX_SAP.xlsx";
+            this.label2.Text = "SAP: \\files\\SAP.xlsx";
             // 
             // label1
             // 

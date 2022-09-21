@@ -33,6 +33,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CheckFiles));
             this.lblMain = new System.Windows.Forms.Label();
             this.dtgvFilesList = new System.Windows.Forms.DataGridView();
+            this.cbSAPFile = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.dtgvFilesList)).BeginInit();
             this.SuspendLayout();
             // 
@@ -59,7 +60,7 @@
             dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.dtgvFilesList.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.dtgvFilesList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dtgvFilesList.Location = new System.Drawing.Point(12, 38);
+            this.dtgvFilesList.Location = new System.Drawing.Point(12, 82);
             this.dtgvFilesList.Name = "dtgvFilesList";
             this.dtgvFilesList.ReadOnly = true;
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
@@ -72,14 +73,26 @@
             this.dtgvFilesList.RowHeadersDefaultCellStyle = dataGridViewCellStyle2;
             this.dtgvFilesList.RowHeadersWidth = 51;
             this.dtgvFilesList.RowTemplate.Height = 29;
-            this.dtgvFilesList.Size = new System.Drawing.Size(414, 330);
+            this.dtgvFilesList.Size = new System.Drawing.Size(356, 314);
             this.dtgvFilesList.TabIndex = 1;
+            // 
+            // cbSAPFile
+            // 
+            this.cbSAPFile.AutoSize = true;
+            this.cbSAPFile.Enabled = false;
+            this.cbSAPFile.Location = new System.Drawing.Point(12, 52);
+            this.cbSAPFile.Name = "cbSAPFile";
+            this.cbSAPFile.Size = new System.Drawing.Size(84, 24);
+            this.cbSAPFile.TabIndex = 2;
+            this.cbSAPFile.Text = "SAP File";
+            this.cbSAPFile.UseVisualStyleBackColor = true;
             // 
             // CheckFiles
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(438, 384);
+            this.ClientSize = new System.Drawing.Size(379, 408);
+            this.Controls.Add(this.cbSAPFile);
             this.Controls.Add(this.dtgvFilesList);
             this.Controls.Add(this.lblMain);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
@@ -98,5 +111,6 @@
 
         private Label lblMain;
         private DataGridView dtgvFilesList;
+        private CheckBox cbSAPFile;
     }
 }
