@@ -40,11 +40,11 @@ namespace Pigeon
                 List<Result> noComparerResults = new();
                 List<Result> bankSAPOverall = new();
                 List<TnxBank> allTnxBanks = new();
-                Dictionary<string, List<Result>> grouppedResults = new();
+                Dictionary<string, List<Result>> BankStoreSlipByStore = new();
                 AddTextToDebug("First compare Bank and StoreSlip");
                 foreach (KeyValuePair<string, List<string>> entry in dict)
                 {
-                    List<Result> results = new();
+                    List<Result> BankStoreSlip = new();
                     if (entry.Value.Count != 1)
                     {
                         AddTextToDebug(entry.Key);
@@ -84,9 +84,9 @@ namespace Pigeon
                         // start comparing
                         AddTextToDebug(" + Compare the possible pair");
                         AddTextToDebug("  - between Bank and Store Slip (Bank - Slip)");
-                        results.AddRange(CompareBankStoreSlip(bankSums, slipSums, entry.Key));
-                        grouppedResults.Add(entry.Key, results.Where(x => x.Comparer2 != null).OrderBy(r => r.CutoffDate).ThenBy(r => r.SRCBank).ThenBy(r => r.Comparer1).ToList());
-                        noComparerResults = (from res in results
+                        BankStoreSlip.AddRange(CompareBankStoreSlip(bankSums, slipSums, entry.Key));
+                        BankStoreSlipByStore.Add(entry.Key, BankStoreSlip.Where(x => x.Comparer2 != null).OrderBy(r => r.CutoffDate).ThenBy(r => r.SRCBank).ThenBy(r => r.Comparer1).ToList());
+                        noComparerResults = (from res in BankStoreSlip
                                              where res.Comparer2 == null
                                              orderby res.Store
                                              orderby res.CutoffDate
@@ -132,10 +132,10 @@ namespace Pigeon
                     }
                 }
                 btnSaveDebug.Enabled = true;
-                if (grouppedResults.Count != 0 || dict.Count != 0)
+                if (BankStoreSlipByStore.Count != 0 || dict.Count != 0)
                 {
                     AddTextToDebug(" + Creating file excel result");
-                    CreateExcelResult(grouppedResults, bankSAPOverall,noComparerResults);
+                    CreateExcelResult(BankStoreSlipByStore, bankSAPOverall);
                 }
                 lblProcessDesc.Text = "...";
                 AddTextToDebug($"****** Program is finishing {DateTime.Now} ******");
@@ -149,7 +149,7 @@ namespace Pigeon
             }
         }
 
-        private void CreateExcelResult(Dictionary<string, List<Result>> gr, List<Result> resBS, List<Result> noComparer)
+        private void CreateExcelResult(Dictionary<string, List<Result>> gr, List<Result> resBS)
         {
             Workbook wb = null;
             object misValue = System.Reflection.Missing.Value;
@@ -168,21 +168,9 @@ namespace Pigeon
                 fileInfo.Cells[x.Index + 4, 2] = x.Entry.Value.Contains("Bank") ? "Has" : "-";
                 fileInfo.Cells[x.Index + 4, 3] = x.Entry.Value.Contains("StoreSlip") ? "Has" : "-";
             }
-
-            AddTextToDebug("  - creating no comparer sheet");
-            Worksheet noComparerSheet = wb.Sheets.Add(misValue, misValue, 1, misValue) as Worksheet;
-            noComparerSheet.Name = "No Comparer";
-            noComparerSheet.Cells[1, 1] = "Store";
-            noComparerSheet.Cells[1, 2] = "Cutoff Date";
-            noComparerSheet.Cells[1, 3] = "File Type";
-            noComparerSheet.Cells[1, 4] = "Total";
-            for (int i = 0; i < noComparer.Count; i++)
-            {
-                noComparerSheet.Cells[i + 2, 1] = noComparer[i].Store;
-                noComparerSheet.Cells[i + 2, 2] = noComparer[i].CutoffDate.ToString("dd-MMM-yyyy");
-                noComparerSheet.Cells[i + 2, 3] = noComparer[i].Comparer1;
-                noComparerSheet.Cells[i + 2, 4] = noComparer[i].Comparer1Amount;
-            }
+            fileInfo.Cells.HorizontalAlignment = HorizontalAlignment.Center;
+            fileInfo.Columns.AutoFit();
+            fileInfo.Rows.AutoFit();
 
             AddTextToDebug("  - createing Bank - SAP compare sheet");
             Worksheet bsSheet = wb.Sheets.Add(misValue, misValue, 1, misValue) as Worksheet;
@@ -200,6 +188,9 @@ namespace Pigeon
                 bsSheet.Cells[i + 2, 4] = resBS[i].Comparer2Amount;
                 bsSheet.Cells[i + 2, 5].FormulaR1C1 = $"={resBS[i].Comparer1Amount}-{resBS[i].Comparer2Amount}";
             }
+            bsSheet.Cells.HorizontalAlignment = HorizontalAlignment.Center;
+            bsSheet.Columns.AutoFit();
+            bsSheet.Rows.AutoFit();
 
             foreach (KeyValuePair<string, List<Result>> g in gr)
             {
@@ -217,7 +208,8 @@ namespace Pigeon
                     if (g.Value[i].SRCBank != null)
                     {
                         awsh.Cells[i + 2, 2] = g.Value[i].SRCBank == "InnerBank" ? "ACLEDA Bank Plc. (TC)" : "Other Bank (KHQR)";
-                    } else
+                    }
+                    else
                     {
                         awsh.Cells[i + 2, 2] = "-";
                     }
@@ -225,7 +217,8 @@ namespace Pigeon
                     if (g.Value[i].Comparer2 != null)
                     {
                         awsh.Cells[i + 2, 4] = $"{g.Value[i].Comparer2} ({g.Value[i].Comparer2Amount})";
-                    } else
+                    }
+                    else
                     {
                         awsh.Cells[i + 2, 4] = "No Comparer";
                         awsh.Cells[i + 2, 5] = "-";
