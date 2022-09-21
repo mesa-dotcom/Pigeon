@@ -11,7 +11,6 @@ namespace Pigeon
             {
                 Directory.CreateDirectory(path);
             }
-            LookingFile();
         }
 
         private void LookingFile()
@@ -38,12 +37,14 @@ namespace Pigeon
 
         private void btnCheckFile_Click(object sender, EventArgs e)
         {
+            LookingFile();
             CheckFiles checkFiles = new CheckFiles(dict);
             checkFiles.ShowDialog();
         }
 
         private void btnCompare_Click(object sender, EventArgs e)
         {
+            LookingFile();
             Compare compare = new Compare(dict);
             compare.ShowDialog();
         }
