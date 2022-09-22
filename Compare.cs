@@ -64,7 +64,6 @@ namespace Pigeon
                         {
                             allTnxBanks.AddRange(tnxBanks);
                             AddTextToDebug("  - get total of the bank file...");
-                            // filter ACLEDA Bank Plc.
                             bankSums = tnxBanks.OrderBy(tb => tb.CutoffDate).GroupBy(tb => tb.CutoffDate).Select(i => new CommonSum
                             {
                                 CutoffDate = i.Key,
@@ -97,38 +96,36 @@ namespace Pigeon
                     {
                         AddTextToDebug($"There is only one file, {entry.Key} {entry.Value[0]}, cannot compare to anything.");
                     }
-
+                }
+                if (HasSAP)
+                {
                     List<SAP> SAPs = new();
                     List<SumByInterX> sapSums = new();
-
-                    if (HasSAP)
+                    AddTextToDebug("SAP");
+                    SAPs = GetSAPs("SAP");
+                    AddTextToDebug(" - get data from SAP file");
+                    if (SAPs.Count != 0)
                     {
-                        AddTextToDebug("SAP");
-                        SAPs = GetSAPs("SAP");
-                        AddTextToDebug(" - get data from SAP file");
-                        if (SAPs.Count != 0)
+                        AddTextToDebug(" - sum amount SAP by cutoff date");
+                        sapSums = SAPs.OrderBy(s => s.DocDate).GroupBy(s => new { s.DocDate, s.InterXBank }).Select(i => new SumByInterX
                         {
-                            AddTextToDebug(" - sum amount SAP by cutoff date");
-                            sapSums = SAPs.OrderBy(s => s.DocDate).GroupBy(s => new { s.DocDate, s.InterXBank }).Select(i => new SumByInterX
-                            {
-                                CutoffDate = i.Key.DocDate,
-                                InterXBank = i.Key.InterXBank,
-                                Total = i.Sum(x => x.AmountInLocalCur)
-                            }).ToList();
-                            AddTextToDebug(" - sum amount BANK by cutoff date");
-                            List<SumByInterX> allSumBanksByInterX = allTnxBanks.OrderBy(s => s.CutoffDate).GroupBy(s => new { s.CutoffDate, s.InterXBank }).Select(i => new SumByInterX
-                            {
-                                CutoffDate = i.Key.CutoffDate,
-                                InterXBank = i.Key.InterXBank,
-                                Total = i.Sum(x => x.PaymentAmount)
-                            }).ToList();
-                            AddTextToDebug(" - compare SAP and Bank overall");
-                            bankSAPOverall = (from bso in CompareBankSAPAll(allSumBanksByInterX, sapSums)
-                                              where bso.Comparer2 != null && bso.Comparer1 != null
-                                              orderby bso.CutoffDate
-                                              orderby bso.SRCBank
-                                              select bso).ToList();
-                        }
+                            CutoffDate = i.Key.DocDate,
+                            InterXBank = i.Key.InterXBank,
+                            Total = i.Sum(x => x.AmountInLocalCur)
+                        }).ToList();
+                        AddTextToDebug(" - sum amount BANK by cutoff date");
+                        List<SumByInterX> allSumBanksByInterX = allTnxBanks.OrderBy(s => s.CutoffDate).GroupBy(s => new { s.CutoffDate, s.InterXBank }).Select(i => new SumByInterX
+                        {
+                            CutoffDate = i.Key.CutoffDate,
+                            InterXBank = i.Key.InterXBank,
+                            Total = i.Sum(x => x.PaymentAmount)
+                        }).ToList();
+                        AddTextToDebug(" - compare SAP and Bank overall");
+                        bankSAPOverall = (from bso in CompareBankSAPAll(allSumBanksByInterX, sapSums)
+                                          where bso.Comparer2 != null && bso.Comparer1 != null
+                                          orderby bso.CutoffDate
+                                          orderby bso.SRCBank
+                                          select bso).ToList();
                     }
                 }
                 btnSaveDebug.Enabled = true;
@@ -232,7 +229,7 @@ namespace Pigeon
                     awsh.Rows.AutoFit();
                 }
             }
-            wb.SaveAs(CurrentDirectory + $"\\results\\result_{runningTime.ToString("yyyyMMdd_HHmm")}.xlsx", XlFileFormat.xlWorkbookDefault, misValue, misValue, misValue, misValue, XlSaveAsAccessMode.xlExclusive, misValue, misValue, misValue, misValue, misValue);
+            wb.SaveAs(CurrentDirectory + $"\\results\\result_{runningTime:yyyyMMdd_HHmm}.xlsx", XlFileFormat.xlWorkbookDefault, misValue, misValue, misValue, misValue, XlSaveAsAccessMode.xlExclusive, misValue, misValue, misValue, misValue, misValue);
             wb.Close(true, misValue, misValue);
             app.Quit();
         }
@@ -316,7 +313,7 @@ namespace Pigeon
 
         private List<Result> CompareBankStoreSlip(List<CommonSum> bankSums, List<CommonSum> slipSums, string store)
         {
-            List<Result> res = new List<Result>();
+            List<Result> res = new();
             lblProcessDesc.Text = "comparing bank and store slip by cutoff date...";
             // full outer join by left join and union
             var res1 = from bs in bankSums
@@ -392,7 +389,7 @@ namespace Pigeon
 
         private List<Result> CompareSAPStoreSlip(List<CommonSum> sapSums, List<CommonSum> slipSums, string store)
         {
-            List<Result> res = new List<Result>();
+            List<Result> res = new();
             lblProcessDesc.Text = "comparing sap and store slip by cutoff date...";
             // full outer join by left join and union
             var res1 = from sas in sapSums
@@ -465,7 +462,7 @@ namespace Pigeon
 
         private List<TnxBank> GetTnxBank(string filename)
         {
-            List<TnxBank> tnxBanks = new List<TnxBank>();
+            List<TnxBank> tnxBanks = new();
             string path = CurrentDirectory + "\\files\\" + filename;
             Workbook wb = app.Workbooks.Open(path);
             Worksheet wsh = wb.Worksheets[1];
@@ -507,7 +504,7 @@ namespace Pigeon
 
         private List<SAP> GetSAPs(string filename)
         {
-            List<SAP> SAPs = new List<SAP>();
+            List<SAP> SAPs = new();
             string path = CurrentDirectory + "\\files\\" + filename;
             Workbook wb = app.Workbooks.Open(path);
             Worksheet wsh = wb.Worksheets[1];
@@ -559,7 +556,7 @@ namespace Pigeon
 
         private List<Slip> GetSlips(string filename)
         {
-            List<Slip> slips = new List<Slip>();
+            List<Slip> slips = new();
             string path = CurrentDirectory + "\\files\\" + filename;
             Workbook wb = app.Workbooks.Open(path);
             Worksheet wsh = wb.Worksheets[1];
@@ -634,7 +631,7 @@ namespace Pigeon
             try
             {
                 // create log text file
-                using (FileStream fs = File.Create(CurrentDirectory + $"\\results\\log_{runningTime.ToString("yyyyMMdd_HHmm")}.txt"))
+                using (FileStream fs = File.Create(CurrentDirectory + $"\\results\\log_{runningTime:yyyyMMdd_HHmm}.txt"))
                 {
                     string str = tbDebug.Text;
                     Byte[] data = new UTF8Encoding(true).GetBytes(str);

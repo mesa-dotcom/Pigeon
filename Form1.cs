@@ -17,6 +17,7 @@ namespace Pigeon
 
         private void LookingFile()
         {
+            dict.Clear();
             string[] files = Directory.GetFiles(Environment.CurrentDirectory + "\\files", "*.*").Where(file => new string[] { ".xlsx", ".xls" }.Contains(Path.GetExtension(file))).ToArray();
             if (files.FirstOrDefault(f => f.Contains("\\SAP.xls") || f.Contains("\\SAP.xlsx")) != null)
             {
