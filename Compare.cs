@@ -37,14 +37,14 @@ namespace Pigeon
         {
             try
             {
-                List<Result> noComparerResults = new();
+                List<Result> resultsAll = new();
                 List<Result> bankSAPOverall = new();
                 List<TnxBank> allTnxBanks = new();
+                List<Result> BankStoreSlip = new();
                 Dictionary<string, List<Result>> BankStoreSlipByStore = new();
                 AddTextToDebug("First compare Bank and StoreSlip");
                 foreach (KeyValuePair<string, List<string>> entry in dict)
                 {
-                    List<Result> BankStoreSlip = new();
                     if (entry.Value.Count != 1)
                     {
                         AddTextToDebug(entry.Key);
@@ -85,12 +85,6 @@ namespace Pigeon
                         AddTextToDebug("  - between Bank and Store Slip (Bank - Slip)");
                         BankStoreSlip.AddRange(CompareBankStoreSlip(bankSums, slipSums, entry.Key));
                         BankStoreSlipByStore.Add(entry.Key, BankStoreSlip.Where(x => x.Comparer2 != null).OrderBy(r => r.CutoffDate).ThenBy(r => r.SRCBank).ThenBy(r => r.Comparer1).ToList());
-                        noComparerResults = (from res in BankStoreSlip
-                                             where res.Comparer2 == null
-                                             orderby res.Store
-                                             orderby res.CutoffDate
-                                             orderby res.Comparer1
-                                             select res).ToList();
                     }
                     else if (entry.Value.Count == 1 && !HasSAP)
                     {
@@ -121,18 +115,26 @@ namespace Pigeon
                             Total = i.Sum(x => x.PaymentAmount)
                         }).ToList();
                         AddTextToDebug(" - compare SAP and Bank overall");
-                        bankSAPOverall = (from bso in CompareBankSAPAll(allSumBanksByInterX, sapSums)
-                                          where bso.Comparer2 != null && bso.Comparer1 != null
-                                          orderby bso.CutoffDate
-                                          orderby bso.SRCBank
-                                          select bso).ToList();
+                        bankSAPOverall = CompareBankSAPAll(allSumBanksByInterX, sapSums);
                     }
                 }
                 btnSaveDebug.Enabled = true;
                 if (BankStoreSlipByStore.Count != 0 || dict.Count != 0)
                 {
+                    AddTextToDebug(" + Get no comparer transaction");
+                    var storeSlipNoComparer = (from bss in BankStoreSlip
+                                               where bss.Comparer1 == "StoreSlip" && bss.Comparer2 == null
+                                               select bss).ToList();
+                    var SAPNoComparer = (from bso in bankSAPOverall
+                                         where bso.Comparer1 == "SAP" && bso.Comparer2 == null
+                                         select bso).ToList();
+                    var bankSAP = (from bso in bankSAPOverall
+                                   where bso.Comparer2 != null && bso.Comparer1 != null
+                                   orderby bso.CutoffDate
+                                   orderby bso.SRCBank
+                                   select bso).ToList();
                     AddTextToDebug(" + Creating file excel result");
-                    CreateExcelResult(BankStoreSlipByStore, bankSAPOverall);
+                    CreateExcelResult(BankStoreSlipByStore, bankSAP);
                 }
                 lblProcessDesc.Text = "...";
                 AddTextToDebug($"****** Program is finishing {DateTime.Now} ******");
@@ -234,7 +236,7 @@ namespace Pigeon
             app.Quit();
         }
 
-        private List<Result> CompareBankSAPAll(List<SumByInterX> sbixs, List<SumByInterX> saps, string store = "")
+        private List<Result> CompareBankSAPAll(List<SumByInterX> sbixs, List<SumByInterX> saps)
         {
             List<Result> res = new List<Result>();
             lblProcessDesc.Text = "comparing bank and sap by cutoff date and bank type";
@@ -272,7 +274,6 @@ namespace Pigeon
                     AddTextToDebug($"    > {donly} {r.InterXBank}: Bank - SAP = {r.BankSum} - {r.Sap} = {r.BankSum - r.Sap} ");
                     res.Add(new Result
                     { 
-                        Store = store,
                         CutoffDate = r.CutoffDate,
                         SRCBank = r.InterXBank,
                         Comparer1 = "Bank",
@@ -286,7 +287,6 @@ namespace Pigeon
                     AddTextToDebug($"    > {donly} {r.InterXBank}: Bank ({r.BankSum}), no SAP");
                     res.Add(new Result
                     {
-                        Store = store,
                         CutoffDate = r.CutoffDate,
                         SRCBank = r.InterXBank,
                         Comparer1 = "Bank",
@@ -299,7 +299,6 @@ namespace Pigeon
                     AddTextToDebug($"    > {donly} {r.InterXBank}: SAP ({r.Sap}), no Bank");
                     res.Add(new Result
                     {
-                        Store = store,
                         CutoffDate = r.CutoffDate,
                         SRCBank = r.InterXBank,
                         Comparer1 = "SAP",
