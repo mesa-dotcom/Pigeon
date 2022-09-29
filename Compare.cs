@@ -126,7 +126,7 @@ namespace Pigeon
             {
                 if (MessageBox.Show(exc.Message, "Error occurs.", MessageBoxButtons.OK) == DialogResult.OK)
                 {
-                    createLogFile();
+                    createLogFile("debug");
                     Close();
                 }
             }
@@ -176,10 +176,10 @@ namespace Pigeon
                     noComp.Cells[i + 2, 4] = noComparerRes[i].SRCBank == null ? "No StoreSlip" : $"No SAP ({noComparerRes[i].SRCBank})";
                 } else if (noComparerRes[i].Comparer1 == "SAP")
                 {
-                    noComp.Cells[i + 2, 4] = noComparerRes[i].SRCBank = $"No Bank ({noComparerRes[i].SRCBank})";
+                    noComp.Cells[i + 2, 4] = noComparerRes[i].SRCBank == null ? $"No Bank ({noComparerRes[i].SRCBank})" : "No Bank";
                 } else
                 {
-                    noComp.Cells[i + 2, 4] = noComparerRes[i].SRCBank = "No Bank ";
+                    noComp.Cells[i + 2, 4] = "No Bank ";
                 }
                 noComp.Cells[i + 2, 4].Font.Color = ColorTranslator.ToOle(Color.Red);
             }
@@ -401,7 +401,7 @@ namespace Pigeon
                         Store = store,
                         CutoffDate = r.CutoffDate,
                         SRCBank = null,
-                        Comparer1 = "Store Slip",
+                        Comparer1 = "StoreSlip",
                         Comparer1Amount = r.SlipSum,
                         Comparer2Amount = null
                     });
@@ -553,14 +553,16 @@ namespace Pigeon
 
         private string CheckColumnName(Microsoft.Office.Interop.Excel.Range cells, List<string> columns)
         {
+            var wrong_col = "";
             for (int i = 1; i < columns.Count + 1; i++)
             {
                 if (cells[1, i].text != columns[i - 1])
                 {
-                    return cells[1, i].text;
+                    wrong_col = columns[i - 1];
+                    break;
                 }
             }
-            return "";
+            return wrong_col;
         }
 
         private void AddTextToDebug(string txt)
@@ -583,7 +585,7 @@ namespace Pigeon
         {
             try
             {
-                createLogFile();
+                createLogFile("log");
             }
             catch (Exception exc)
             {
@@ -595,10 +597,10 @@ namespace Pigeon
             }
         }
 
-        private void createLogFile()
+        private void createLogFile(string name)
         {
             // create log text file
-            using (FileStream fs = File.Create(CurrentDirectory + $"\\results\\log_{runningTime:yyyyMMdd_HHmm}.txt"))
+            using (FileStream fs = File.Create(CurrentDirectory + $"\\results\\{name}_{runningTime:yyyyMMdd_HHmm}.txt"))
             {
                 string str = tbDebug.Text;
                 Byte[] data = new UTF8Encoding(true).GetBytes(str);

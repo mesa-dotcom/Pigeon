@@ -2,16 +2,21 @@ namespace Pigeon
 {
     public partial class Pigeon : Form
     {
-        string path = Environment.CurrentDirectory + "\\files";
+        string path_files = Environment.CurrentDirectory + "\\files";
+        string path_results = Environment.CurrentDirectory + "\\results";
         Dictionary<string, List<string>> dict = new Dictionary<string, List<string>>();
         bool hasSAP = false;
         List<string> list = new List<string> { "Bank", "StoreSlip"};
         public Pigeon()
         {
             InitializeComponent();
-            if (!Directory.Exists(path))
+            if (!Directory.Exists(path_files))
             {
-                Directory.CreateDirectory(path);
+                Directory.CreateDirectory(path_files);
+            }
+            if (!Directory.Exists(path_results))
+            {
+                Directory.CreateDirectory(path_results);
             }
         }
 
