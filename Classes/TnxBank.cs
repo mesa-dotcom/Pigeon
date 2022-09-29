@@ -16,5 +16,6 @@ namespace Pigeon.Classes
         public string SettleStatus { get; set; }
         public string SRCBank { get; set; }
         public string InterXBank { get; set; }
+        public string? Store { get; set; }
     }
 }

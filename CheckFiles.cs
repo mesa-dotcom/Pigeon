@@ -25,10 +25,12 @@ namespace Pigeon
         {
             if (hasSAP)
             {
-                cbSAPFile.Checked = true;
+                hasNohasSAP.Text = "Has";
+                //hasNohasSAP.ForeColor = Color.Green;
             } else
             {
-                cbSAPFile.Checked = false;
+                hasNohasSAP.Text = "No Has";
+                //hasNohasSAP.ForeColor = Color.Red;
             }
         }
 
@@ -46,8 +48,8 @@ namespace Pigeon
                 DataRow dr = dt.NewRow();
                 dr["No"] = i;
                 dr["Store"] = entry.Key;
-                dr["Bank"] = files.Contains("Bank") ? "/" : "-";
-                dr["Store Slip"] = files.Contains("StoreSlip") ? "/" : "-";
+                dr["Bank"] = files.Contains("Bank") ? "Has" : "No Has";
+                dr["Store Slip"] = files.Contains("StoreSlip") ? "Has" : "No Has";
                 dt.Rows.Add(dr);
                 i++;
             }

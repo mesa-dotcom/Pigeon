@@ -28,12 +28,13 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CheckFiles));
             this.lblMain = new System.Windows.Forms.Label();
             this.dtgvFilesList = new System.Windows.Forms.DataGridView();
-            this.cbSAPFile = new System.Windows.Forms.CheckBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.hasNohasSAP = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dtgvFilesList)).BeginInit();
             this.SuspendLayout();
             // 
@@ -51,48 +52,56 @@
             // 
             this.dtgvFilesList.AllowUserToAddRows = false;
             this.dtgvFilesList.AllowUserToDeleteRows = false;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dtgvFilesList.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dtgvFilesList.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.dtgvFilesList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dtgvFilesList.Location = new System.Drawing.Point(12, 82);
             this.dtgvFilesList.Name = "dtgvFilesList";
             this.dtgvFilesList.ReadOnly = true;
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dtgvFilesList.RowHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dtgvFilesList.RowHeadersDefaultCellStyle = dataGridViewCellStyle4;
             this.dtgvFilesList.RowHeadersWidth = 51;
             this.dtgvFilesList.RowTemplate.Height = 29;
             this.dtgvFilesList.Size = new System.Drawing.Size(356, 314);
             this.dtgvFilesList.TabIndex = 1;
             // 
-            // cbSAPFile
+            // label1
             // 
-            this.cbSAPFile.AutoSize = true;
-            this.cbSAPFile.Enabled = false;
-            this.cbSAPFile.Location = new System.Drawing.Point(12, 52);
-            this.cbSAPFile.Name = "cbSAPFile";
-            this.cbSAPFile.Size = new System.Drawing.Size(84, 24);
-            this.cbSAPFile.TabIndex = 2;
-            this.cbSAPFile.Text = "SAP File";
-            this.cbSAPFile.UseVisualStyleBackColor = true;
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(12, 46);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(65, 20);
+            this.label1.TabIndex = 2;
+            this.label1.Text = "SAP File:";
+            // 
+            // hasNohasSAP
+            // 
+            this.hasNohasSAP.AutoSize = true;
+            this.hasNohasSAP.Location = new System.Drawing.Point(83, 46);
+            this.hasNohasSAP.Name = "hasNohasSAP";
+            this.hasNohasSAP.Size = new System.Drawing.Size(34, 20);
+            this.hasNohasSAP.TabIndex = 3;
+            this.hasNohasSAP.Text = "Has";
             // 
             // CheckFiles
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(379, 408);
-            this.Controls.Add(this.cbSAPFile);
+            this.Controls.Add(this.hasNohasSAP);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.dtgvFilesList);
             this.Controls.Add(this.lblMain);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
@@ -111,6 +120,7 @@
 
         private Label lblMain;
         private DataGridView dtgvFilesList;
-        private CheckBox cbSAPFile;
+        private Label label1;
+        private Label hasNohasSAP;
     }
 }

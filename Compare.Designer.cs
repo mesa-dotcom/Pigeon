@@ -37,7 +37,7 @@
             // 
             // tbDebug
             // 
-            this.tbDebug.Font = new System.Drawing.Font("Times New Roman", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.tbDebug.Font = new System.Drawing.Font("Times New Roman", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.tbDebug.ForeColor = System.Drawing.SystemColors.Desktop;
             this.tbDebug.Location = new System.Drawing.Point(12, 50);
             this.tbDebug.Multiline = true;
@@ -45,7 +45,7 @@
             this.tbDebug.ReadOnly = true;
             this.tbDebug.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.tbDebug.ShortcutsEnabled = false;
-            this.tbDebug.Size = new System.Drawing.Size(628, 364);
+            this.tbDebug.Size = new System.Drawing.Size(556, 364);
             this.tbDebug.TabIndex = 0;
             // 
             // lblProcess
@@ -69,7 +69,7 @@
             // btnSaveDebug
             // 
             this.btnSaveDebug.Enabled = false;
-            this.btnSaveDebug.Location = new System.Drawing.Point(546, 9);
+            this.btnSaveDebug.Location = new System.Drawing.Point(474, 9);
             this.btnSaveDebug.Name = "btnSaveDebug";
             this.btnSaveDebug.Size = new System.Drawing.Size(94, 29);
             this.btnSaveDebug.TabIndex = 3;
@@ -81,7 +81,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(656, 433);
+            this.ClientSize = new System.Drawing.Size(583, 426);
             this.Controls.Add(this.btnSaveDebug);
             this.Controls.Add(this.lblProcessDesc);
             this.Controls.Add(this.lblProcess);
