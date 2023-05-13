@@ -2,135 +2,66 @@ namespace Pigeon
 {
     public partial class Pigeon : Form
     {
+        string path_files = Environment.CurrentDirectory + "\\files";
+        string path_results = Environment.CurrentDirectory + "\\results";
+        Dictionary<string, List<string>> dict = new Dictionary<string, List<string>>();
+        bool hasSAP = false;
+        List<string> list = new List<string> { "Bank", "StoreSlip"};
         public Pigeon()
         {
             InitializeComponent();
-            enabled_btnCheck();
-        }
-
-        private void btnBankBrowse_Click(object sender, EventArgs e)
-        {
-            OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Title = "Select Bank file";
-            ofd.InitialDirectory = @"C:\";
-            ofd.Filter = "Excel Files| *.xls; *.xlsx; *.xlsm";
-            ofd.FilterIndex = 1;
-            ofd.ShowDialog();
-            if (ofd.FileName != "")
+            if (!Directory.Exists(path_files))
             {
-                rtbBankPathName.Text = ofd.FileName;
+                Directory.CreateDirectory(path_files);
+            }
+            if (!Directory.Exists(path_results))
+            {
+                Directory.CreateDirectory(path_results);
             }
         }
 
-        private void cbBankSameDir_CheckedChanged(object sender, EventArgs e)
+        private void LookingFile()
         {
-            if (cbBankSameDir.Checked)
+            dict.Clear();
+            string[] files = Directory.GetFiles(Environment.CurrentDirectory + "\\files", "*.*").Where(file => new string[] { ".xlsx", ".xls" }.Contains(Path.GetExtension(file))).ToArray();
+            if (files.FirstOrDefault(f => f.Contains("\\SAP.xls") || f.Contains("\\SAP.xlsx")) != null)
             {
-                rtbBankPathName.Text = "";
-                btnBankBrowse.Enabled = false;
+                hasSAP = true;
+            } else
+            {
+                hasSAP = false;
             }
-            else
+            foreach (var f in files)
             {
-                btnBankBrowse.Enabled = true;
-            }
-            enabled_btnCheck();
-        }
-
-        private void btnSAPBrowse_Click(object sender, EventArgs e)
-        {
-            OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Title = "Select SAP file";
-            ofd.InitialDirectory = @"C:\";
-            ofd.Filter = "Excel Files| *.xls; *.xlsx; *.xlsm";
-            ofd.FilterIndex = 1;
-            ofd.ShowDialog();
-            if (ofd.FileName != "")
-            {
-                rtbSAPPathName.Text = ofd.FileName;
-            }
-        }
-
-        private void btnStoreSlipBrowse_Click(object sender, EventArgs e)
-        {
-            OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Title = "Select Store Slip file";
-            ofd.InitialDirectory = @"C:\";
-            ofd.Filter = "Excel Files| *.xls; *.xlsx; *.xlsm";
-            ofd.FilterIndex = 1;
-            ofd.ShowDialog();
-            if (ofd.FileName != "")
-            {
-                rtbStoreSlipPathName.Text = ofd.FileName;
+                var x = f.Split(Environment.CurrentDirectory + "\\files\\")[1].Split("_");
+                var key = x[0];
+                if (key.StartsWith("B") && key.Length == 6)
+                {
+                    var value = x[1].Split(".")[0];
+                    if (dict.ContainsKey(key) && list.Contains(value))
+                    {
+                        dict[key].Add(value);
+                    }
+                    else if (list.Contains(value))
+                    {
+                        dict.Add(key, new List<string> { value });
+                    }
+                }
             }
         }
 
-        private void cbSAPSameDir_CheckedChanged(object sender, EventArgs e)
+        private void btnCheckFile_Click(object sender, EventArgs e)
         {
-            if (cbSAPSameDir.Checked)
-            {
-                rtbSAPPathName.Text = "";
-                btnSAPBrowse.Enabled = false;
-            }
-            else
-            {
-                btnSAPBrowse.Enabled = true;
-            }
-            enabled_btnCheck();
+            LookingFile();
+            CheckFiles checkFiles = new CheckFiles(dict, hasSAP);
+            checkFiles.ShowDialog();
         }
 
-        private void cbStoreSlipSameDir_CheckedChanged(object sender, EventArgs e)
+        private void btnCompare_Click(object sender, EventArgs e)
         {
-            if (cbStoreSlipSameDir.Checked)
-            {
-                rtbStoreSlipPathName.Text = "";
-                btnStoreSlipBrowse.Enabled = false;
-            }
-            else
-            {
-                btnStoreSlipBrowse.Enabled = true;
-            }
-            enabled_btnCheck();
-        }
-
-        private void rtbBankPathName_TextChanged(object sender, EventArgs e)
-        {
-            enabled_btnCheck();
-        }
-
-        private void rtbSAPPathName_TextChanged(object sender, EventArgs e)
-        {
-            enabled_btnCheck();
-        }
-
-        private void rtbStoreSlipPathName_TextChanged(object sender, EventArgs e)
-        {
-            enabled_btnCheck();
-        }
-
-        private void enabled_btnCheck()
-        {
-            if ((rtbBankPathName.Text != "" || rtbSAPPathName.Text != "" || rtbStoreSlipPathName.Text != "") || cbBankSameDir.Checked && cbSAPSameDir.Checked && cbStoreSlipSameDir.Checked)
-            {
-                btnCheck.Enabled = true;
-            }
-            else
-            {
-                btnCheck.Enabled = false;
-            }
-        }
-
-        private void btnCheck_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                
-            }
-            catch (Exception err)
-            {
-                MessageBox.Show(err.Message);
-            }
-            Checking checking = new Checking(rtbStoreSlipPathName.Text);
-            checking.ShowDialog();
+            LookingFile();
+            Compare compare = new Compare(dict, hasSAP);
+            compare.ShowDialog();
         }
     }
 }

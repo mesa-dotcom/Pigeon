@@ -6,12 +6,9 @@ using System.Threading.Tasks;
 
 namespace Pigeon.Classes
 {
-    internal class Slip
+    internal class CommonSum
     {
-        public DateOnly TrxDate { get; set; }
-        public TimeOnly TrxTime { get; set; }
         public DateOnly CutoffDate { get; set; }
-        public decimal Amount { get; set; }
-        public string? Store { get; set; }
+        public decimal Total { get; set; }
     }
 }
