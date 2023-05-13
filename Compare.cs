@@ -23,8 +23,11 @@ namespace Pigeon
         public DateTime runningTime = DateTime.MinValue;
         public string CurrentDirectory = Environment.CurrentDirectory;
         public bool HasSAP = false;
+        CultureInfo ci = new CultureInfo("en-GB");
         public Compare(Dictionary<string, List<string>> dict_param, bool hs)
         {
+            Thread.CurrentThread.CurrentCulture = ci;
+            Thread.CurrentThread.CurrentUICulture = ci;
             dict = dict_param;
             HasSAP = hs;
             runningTime = DateTime.Now;
@@ -55,6 +58,7 @@ namespace Pigeon
                         tnxBanks = GetTnxBank(entry.Key);
                         AddTextToDebug("  -- reading file store slip...");
                         slips = GetSlips(entry.Key + "_StoreSlip");
+                        var slips3 = slips.FindAll(s => s.CutoffDate == new DateOnly(2022, 10, 3)).ToList();
 
                         // Calucate sum group by
                         AddTextToDebug("  - Calculate total from the files");
@@ -100,7 +104,13 @@ namespace Pigeon
                 if (allTnxBanks.Count != 0 && HasSAP)
                 {
                     AddTextToDebug("  - get data from SAP file");
-                    SAPs = GetSAPs("SAP");
+                    SAPs = GetSAPs("SAP").GroupBy(s => new {s.Store, s.DocDate, s.InterXBank}).Select(i => new SAP
+                    {
+                        Store = i.Key.Store,
+                        AmountInLocalCur = i.Sum(x => x.AmountInLocalCur),
+                        InterXBank = i.Key.InterXBank,
+                        DocDate = i.Key.DocDate
+                    }).ToList();
                     AddTextToDebug("  - calculate sum of transaction bank by store, cutoff date, interaction bank");
                     List<SumByInterX> sumTnxBanksByStore = allTnxBanks.GroupBy(tb => new { tb.Store, tb.CutoffDate, tb.InterXBank }).Select(i => new SumByInterX
                     {
@@ -426,18 +436,18 @@ namespace Pigeon
                     var dt = DateTime.Parse(cells[running_row, 1].value);
                     var donly = DateOnly.FromDateTime(dt);
                     var tonly = TimeOnly.FromDateTime(dt);
-                    var amt = cells[running_row, 12].Text;
+                    var amt = cells[running_row, 12].Text == "" ? "0" : cells[running_row, 12].Text;
                     tnxBank.TnxDateTime = dt;
                     tnxBank.CutoffDate = tonly.CompareTo(TimeOnly.Parse("05:00 PM")) < 0 ? donly : donly.AddDays(1);
                     tnxBank.PaymentAmount = Decimal.Parse(amt);
-                    tnxBank.TnxCCY = cells[running_row, 14].value;
-                    tnxBank.RefPrimary = cells[running_row, 16].value == "" ? cells[running_row, 16].value : cells[running_row, 17].value;
-                    tnxBank.SettleStatus = cells[running_row, 22].value;
-                    tnxBank.SRCBank = cells[running_row, 19].value;
-                    tnxBank.InterXBank = cells[running_row, 19].value == "ACLEDA Bank Plc." ? "InnerBank" : "OtherBank";
+                    tnxBank.TnxCCY = cells[running_row, 18].Text;
+                    tnxBank.RefPrimary = cells[running_row, 20].Text == "" ? cells[running_row, 20].Text : cells[running_row, 21].Text;
+                    tnxBank.SettleStatus = cells[running_row, 26].Text;
+                    tnxBank.SRCBank = cells[running_row, 23].Text;
+                    tnxBank.InterXBank = cells[running_row, 23].Text == "ACLEDA Bank Plc." || cells[running_row, 23].Text == "" ? "InnerBank" : "OtherBank";
                     tnxBank.Store = filename;
                     tnxBanks.Add(tnxBank);
-                    ChangeLblProcessDesc($"reading row {running_row - 1} from file {filename}.");
+                    ChangeLblProcessDesc($"reading row {running_row - 1} from file {filename}_Bank.");
                     running_row++;
                 }
             }
@@ -460,7 +470,7 @@ namespace Pigeon
             Workbook wb = app.Workbooks.Open(path);
             Worksheet wsh = wb.Worksheets[1];
             Microsoft.Office.Interop.Excel.Range cells = wsh.Cells;
-            var ccn = CheckColumnName(cells, new List<string> { "Assignment", "DocumentNo", "BusA", "Type", "Doc. Date", "PK", "Amount in local cur.", "LCurr", "Text" });
+            var ccn = CheckColumnName(cells, new List<string> { "Assignment", "DocumentNo", "BusA", "Type", "Doc. Date", "PK", "Amount in local cur.", "LCurr", "Tx", "Clrng doc.", "Text" });
             if ( ccn != "")
             {
                 wb.Close(0);
@@ -472,7 +482,7 @@ namespace Pigeon
             {
                 while (cells[running_row, 1].value != null)
                 {
-                    if (cells[running_row, 9].Text.Contains("(KHQR") || cells[running_row, 9].Text.Contains("(TC"))
+                    if (cells[running_row, 11].Text.Contains("(KHQR") || cells[running_row, 11].Text.Contains("(TC"))
                     {
                         SAP sap = new();
                         sap.Assignment = (string)cells[running_row, 1].Text;
@@ -486,10 +496,17 @@ namespace Pigeon
                         var amount = cells[running_row, 7].Value;
                         sap.AmountInLocalCur = (decimal)Math.Abs(amount);
                         sap.LCurr = cells[running_row, 8].Text;
-                        string text = cells[running_row, 9].Text;
+                        string text = cells[running_row, 11].Text;
                         sap.Text = text;
                         sap.InterXBank = text.Contains("KHQR") ? "OtherBank" : "InnerBank";
-                        sap.Store = "B" + text[^5..];
+                        string storeId = text[^5..];
+                        if (storeId.StartsWith("3") && !storeId.EndsWith(")"))
+                        {
+                            sap.Store = "B" + storeId;
+                        } else
+                        {
+                            sap.Store = "B30001";
+                        }
                         SAPs.Add(sap);
                     }
                     ChangeLblProcessDesc($"reading row {running_row - 1} from file {filename}.");
